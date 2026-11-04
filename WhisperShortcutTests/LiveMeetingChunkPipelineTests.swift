@@ -577,10 +577,15 @@ struct LiveMeetingChunkPipelineTests {
     let session = makeSession(transcripts: transcripts, box: Counters())
     session.beginSessionWithoutRecorder(transcriptFile: file)
     deliver(session, index: 0, start: 0)
+    // The fake indexes requests by arrival, not chunk ID. Establish that mapping before
+    // launching the next task; concurrent transcription calls may otherwise arrive in reverse.
+    try #require(await waitUntil { transcripts.waiterCount == 1 })
     deliver(session, index: 1, start: 90)
-    #expect(await waitUntil { transcripts.waiterCount == 2 })
+    try #require(await waitUntil { transcripts.waiterCount == 2 })
 
     transcripts.resume(at: 1, returning: "second sentence")
+    // Prove the later chunk has actually landed before allowing its predecessor to finish.
+    try #require(await waitForChunkTexts(at: file, ["second sentence"]))
     transcripts.resume(at: 0, returning: "first sentence")
 
     let ordered = await waitForChunkTexts(at: file, ["first sentence", "second sentence"])
