@@ -4,6 +4,15 @@ Branch: `feat/ubuntu-foundation`, based on merged plan `98a0a653`.
 Code review covered `98a0a653..dd99a915`; fix commit `f12e7a27` addresses both
 Important findings with regression tests. Final HEAD is reported in the PR.
 
+## Delivery blocker
+
+GitHub rejected the HTTPS push because the current GitHub CLI OAuth token lacks
+`workflow` scope for the CI workflow changes. The attempted device authorization
+expired; no remote feature branch or PR was created. Refresh the existing login
+with `gh auth refresh --hostname github.com --scopes workflow`, then retry the
+feature-branch push and open the prepared draft PR. Do not omit workflow changes
+or bypass the permission requirement. All work is committed locally.
+
 ## Delivered
 
 Tooling inventory; canonical platform-aware AGENTS.md and editor pointers;
