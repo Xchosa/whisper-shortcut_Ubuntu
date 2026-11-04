@@ -10,6 +10,14 @@
 
 **Spec:** `plans/active/ubuntu-multiplatform-design.md`, approved by the user on 2026-11-04 and merged in PR #1 (`a31877b6`).
 
+## Execution status (2026-11-04)
+
+Tasks 1–3 are committed and verified. Task 4 prototype and English/German window
+checks are implemented; manual audio, keyring, clipboard and shortcut validation
+await user results. Task 5 CI/checks are implemented; final adapter adoption stays
+conditional on Task 4. Task 6 is deferred because no authorized Mac runtime is
+available. See docs/development/ubuntu-desktop-prototype.md for actual evidence.
+
 ## Global Constraints
 
 - "Never stop an active recording to rebuild, restart, or update an application."
@@ -45,12 +53,12 @@ The approved four-feature scope is retained in the continuation map below.
 
 **Interfaces:** Consumes tracked files and actual references; produces a path-by-path keep/remove/adapt table, with callers and reasons. No executable changes.
 
-- [ ] Inventory with `git ls-files .agents .claude .cursor scripts plans .github` and `rg -n --hidden --glob '!.git/**' --glob '!.claude/worktrees/**' 'agent-loops|implementer|review-growth|ensure-app-running|\.agents/skills|\.cursor/commands' .`.
-- [ ] Record every tracked agent setting/symlink and scheduled entry point. List script sources, macOS CI callers, and in-app consumers before marking anything removable. Distinguish runtime use of project skills from original-owner automation.
-- [ ] Keep original ledgers and gate definitions unchanged; label historical automation as inactive in the inventory. No grading or weakening of an existing loop's gates is part of this migration.
-- [ ] Enumerate the Mac relocation set: `WhisperShortcut/`, `WhisperShortcutTests/`, `WhisperShortcut.xcodeproj/`, both `.xctestplan` files and export-options plist. List dependent scripts, lockfile ignore exceptions, README bundling and workflow paths.
-- [ ] Verify each removal candidate has no retained caller. Treat documentation references as references to update, not proof of executable dependency. `git diff --check` must exit 0.
-- [ ] Commit only the new inventory: `docs: inventory fork tooling and platform dependencies`.
+- [x] Inventory with `git ls-files .agents .claude .cursor scripts plans .github` and `rg -n --hidden --glob '!.git/**' --glob '!.claude/worktrees/**' 'agent-loops|implementer|review-growth|ensure-app-running|\.agents/skills|\.cursor/commands' .`.
+- [x] Record every tracked agent setting/symlink and scheduled entry point. List script sources, macOS CI callers, and in-app consumers before marking anything removable. Distinguish runtime use of project skills from original-owner automation.
+- [x] Keep original ledgers and gate definitions unchanged; label historical automation as inactive in the inventory. No grading or weakening of an existing loop's gates is part of this migration.
+- [x] Enumerate the Mac relocation set: `WhisperShortcut/`, `WhisperShortcutTests/`, `WhisperShortcut.xcodeproj/`, both `.xctestplan` files and export-options plist. List dependent scripts, lockfile ignore exceptions, README bundling and workflow paths.
+- [x] Verify each removal candidate has no retained caller. Treat documentation references as references to update, not proof of executable dependency. `git diff --check` must exit 0.
+- [x] Commit only the new inventory: `docs: inventory fork tooling and platform dependencies`.
 
 ## Task 2: Make active contributor instructions platform-aware
 
@@ -58,14 +66,14 @@ The approved four-feature scope is retained in the continuation map below.
 
 **Interfaces:** Produces one canonical fork-owned contributor guide; editor aliases refer to it; original Mac development commands continue to resolve. Does not change either distribution's runtime identity or loop gate definitions.
 
-- [ ] Mark the design approved, recording the user's approval date and merged PR. Do not rewrite the approved scope.
-- [ ] Replace contributor rules with concise build/run/test routing, privacy, recording protection, explicit-path Git staging, and platform verification requirements. Remove owner-specific model mandates, external session handovers and mandatory loop/queue participation from the fork's active instructions. Keep user mentoring requirements.
-- [ ] Reduce Cursor rules to a pointer to canonical rules and any necessary editor metadata; remove the obsolete model-tier rule. Adapt the code map to identify current Mac paths and the prototype path. Retain `CLAUDE.md` and valid aliases only when useful.
-- [ ] Remove the unconditional `ensure-app-running.sh` Stop hook and inherited release permissions from tracked Claude settings. Do not modify personal settings or credentials.
-- [ ] Remove automatic tag-push release triggers; leave manual release dispatch guarded with a repository variable `FORK_RELEASES_ENABLED == 'true'` on every job that publishes, uploads, signs, promotes or mutates releases. Document that the variable remains unset. Do not enable it. Keep secret-free Mac verification CI.
-- [ ] Detach obsolete scheduled launch/install entry points identified in Task 1 from the active workflow. Do not uninstall host jobs, delete active worktrees, or bulk-delete `.agents`; adapt or retain application-relevant skills. Inactive historical scripts/ledgers can stay until the Mac path migration safely archives them.
-- [ ] Validate JSON settings with `/usr/bin/python3 -m json.tool .claude/settings.json`; inspect symlink targets with `git ls-files -s .claude CLAUDE.md`; verify no retained active rule requires an external deployment session or original-owner model selection. Check the workflow's trigger/job changes directly and record the diff.
-- [ ] Run `git diff --check`. Commit the instruction/automation changes separately: `chore: adapt fork tooling for macOS and Ubuntu`.
+- [x] Mark the design approved, recording the user's approval date and merged PR. Do not rewrite the approved scope.
+- [x] Replace contributor rules with concise build/run/test routing, privacy, recording protection, explicit-path Git staging, and platform verification requirements. Remove owner-specific model mandates, external session handovers and mandatory loop/queue participation from the fork's active instructions. Keep user mentoring requirements.
+- [x] Reduce Cursor rules to a pointer to canonical rules and any necessary editor metadata; remove the obsolete model-tier rule. Adapt the code map to identify current Mac paths and the prototype path. Retain `CLAUDE.md` and valid aliases only when useful.
+- [x] Remove the unconditional `ensure-app-running.sh` Stop hook and inherited release permissions from tracked Claude settings. Do not modify personal settings or credentials.
+- [x] Remove automatic tag-push release triggers; leave manual release dispatch guarded with a repository variable `FORK_RELEASES_ENABLED == 'true'` on every job that publishes, uploads, signs, promotes or mutates releases. Document that the variable remains unset. Do not enable it. Keep secret-free Mac verification CI.
+- [x] Detach obsolete scheduled launch/install entry points identified in Task 1 from the active workflow. Do not uninstall host jobs, delete active worktrees, or bulk-delete `.agents`; adapt or retain application-relevant skills. Inactive historical scripts/ledgers can stay until the Mac path migration safely archives them.
+- [x] Validate JSON settings with `/usr/bin/python3 -m json.tool .claude/settings.json`; inspect symlink targets with `git ls-files -s .claude CLAUDE.md`; verify no retained active rule requires an external deployment session or original-owner model selection. Check the workflow's trigger/job changes directly and record the diff.
+- [x] Run `git diff --check`. Commit the instruction/automation changes separately: `chore: adapt fork tooling for macOS and Ubuntu`.
 
 ## Task 3: Add a reproducible desktop capability probe
 
@@ -73,12 +81,12 @@ The approved four-feature scope is retained in the continuation map below.
 
 **Interfaces:** `desktop_probe.py --json` produces a versioned, redacted JSON report on stdout; exit 0 means the report was generated, not that every capability passed. Report fields: `schema_version: 1`, `platform`, `session_type`, `desktop`, `dependencies` and `capabilities`; each capability contains `status` (`available`, `unavailable`, `blocked`, `untested`) and `reason`. The shell wrapper forwards arguments and status. No recording or GUI launch without an explicit command.
 
-- [ ] Write `test_report_schema`, `test_missing_dependency_is_unavailable`, `test_missing_session_bus_is_blocked`, and `test_report_contains_no_environment_values_or_device_identifiers`. Assertions pin schema version 1, status values, and absence of home paths, credentials, transcript content and full environment dumps.
-- [ ] Run `/usr/bin/python3 -m unittest discover -s apps/linux/prototype/tests -v`; confirm failures before implementing the report functions.
-- [ ] Implement `collect_report() -> dict` and `main(argv: list[str] | None = None) -> int` using only standard Python for headless reporting. Probe GI/GTK/GStreamer/libsecret availability without importing a missing module at module load time; bound external command execution to 5 seconds and handle nonzero statuses explicitly.
-- [ ] Report portal interfaces/versions through the current session bus when reachable. Separate tool presence, interface presence and manually demonstrated functionality; never infer shortcut/audio success merely from installed packages.
-- [ ] Document Ubuntu package installation as an explicit setup step using distro packages for GI and media components. Do not silently run apt, use sudo or replace system Python. Keep recordings/reports outside Git (temporary directory or ignored prototype output directory).
-- [ ] Make `scripts/linux/test.sh` run unittest discovery and preserve the real exit status. Run it and the JSON probe, inspect the full report, then commit: `feat: add Ubuntu desktop capability probe`.
+- [x] Write `test_report_schema`, `test_missing_dependency_is_unavailable`, `test_missing_session_bus_is_blocked`, and `test_report_contains_no_environment_values_or_device_identifiers`. Assertions pin schema version 1, status values, and absence of home paths, credentials, transcript content and full environment dumps.
+- [x] Run `/usr/bin/python3 -m unittest discover -s apps/linux/prototype/tests -v`; confirm failures before implementing the report functions.
+- [x] Implement `collect_report() -> dict` and `main(argv: list[str] | None = None) -> int` using only standard Python for headless reporting. Probe GI/GTK/GStreamer/libsecret availability without importing a missing module at module load time; bound external command execution to 5 seconds and handle nonzero statuses explicitly.
+- [x] Report portal interfaces/versions through the current session bus when reachable. Separate tool presence, interface presence and manually demonstrated functionality; never infer shortcut/audio success merely from installed packages.
+- [x] Document Ubuntu package installation as an explicit setup step using distro packages for GI and media components. Do not silently run apt, use sudo or replace system Python. Keep recordings/reports outside Git (temporary directory or ignored prototype output directory).
+- [x] Make `scripts/linux/test.sh` run unittest discovery and preserve the real exit status. Run it and the JSON probe, inspect the full report, then commit: `feat: add Ubuntu desktop capability probe`.
 
 ## Task 4: Validate GTK, audio, secrets and shortcuts interactively
 

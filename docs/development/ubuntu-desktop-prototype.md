@@ -21,7 +21,7 @@ This is a prototype report, not production acceptance.
 | Silence/disconnect | honest errors and cleanup | handlers implemented; device tests pending | pending user action |
 | Clipboard | paste into another app after hiding window | control implemented; cross-app/background check pending | pending user action |
 | Single instance | second command targets first process | normal second launch exited 0; D-Bus owner PID unchanged | passed for reopen; recording action untested |
-| German copy | every UI message has translation | static source/catalog comparison: 43 messages covered | coverage passed; German render pending |
+| German copy | every UI message has translation | 43 messages covered; separate German smoke window rendered and screenshot visually inspected | coverage and render passed |
 
 Smoke command: `bash scripts/linux/run-prototype.sh --smoke-test`, exit 0:
 
