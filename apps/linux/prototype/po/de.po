@@ -133,4 +133,3 @@ msgstr "Warten Sie vor dem Beenden auf die Schlüsselbundbereinigung."
 
 msgid "Stop or cancel recording before quitting."
 msgstr "Stoppen Sie die Aufnahme oder brechen Sie diese vor dem Beenden ab."
-
