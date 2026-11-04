@@ -150,13 +150,14 @@ class Demo(Gtk.Application):
             monitor.stop()
 
     def set_sources(self, devices):
+        authorized = self.pending_toggle and self.state == "idle"
+        self.pending_toggle = False
         self.devices = devices
         names = [device.get_display_name() for device in devices]
         self.microphone.set_model(Gtk.StringList.new(names or [_("No microphone sources found")]))
         if not devices:
             self.say("No microphone sources found")
-        elif self.pending_toggle:
-            self.pending_toggle = False
+        elif authorized:
             self.start_capture("microphone")
 
     def background_changed(self, button):
@@ -168,6 +169,7 @@ class Demo(Gtk.Application):
             self.background_held = False
 
     def close_window(self, *_):
+        self.pending_toggle = False
         if self.state in {"recording", "stopping"}:
             self.say("Stop or cancel recording before closing.")
             return True
@@ -178,6 +180,7 @@ class Demo(Gtk.Application):
         return True
 
     def start_capture(self, mode):
+        self.pending_toggle = False
         if self.state not in {"idle", "playing"}:
             self.say("Another recording is active.")
             return
@@ -237,7 +240,9 @@ class Demo(Gtk.Application):
 
     def message(self, bus, message):
         if message.type == Gst.MessageType.ERROR:
-            self.cancel()
+            # Playback uses an already-valid recording; an output failure must
+            # preserve it for retry. Failed captures are incomplete disposable output.
+            self.cancel(delete_audio=self.state != "playing")
             self.say("Audio operation failed. Check device availability.")
         elif message.type == Gst.MessageType.EOS:
             was_capture = self.state == "stopping"
@@ -255,6 +260,7 @@ class Demo(Gtk.Application):
         return True
 
     def stop(self):
+        self.pending_toggle = False
         if self.state == "recording":
             self.state = "stopping"
             self.say("Finalizing recording…")
@@ -288,6 +294,7 @@ class Demo(Gtk.Application):
             self.audio_path = None
 
     def cancel(self, delete_audio=True):
+        self.pending_toggle = False
         self.release_pipeline()
         self.state = "idle"
         if delete_audio:
@@ -370,6 +377,7 @@ class Demo(Gtk.Application):
             self.say("Cancelling keyring test; cleanup will follow.")
 
     def request_quit(self):
+        self.pending_toggle = False
         if self.keyring_cancel:
             self.cancel_keyring()
             self.say("Wait for keyring cleanup before quitting.")
@@ -397,6 +405,7 @@ class Demo(Gtk.Application):
         return False
 
     def do_shutdown(self):
+        self.pending_toggle = False
         self.release_pipeline()
         self.scratch.cleanup()
         Gtk.Application.do_shutdown(self)
