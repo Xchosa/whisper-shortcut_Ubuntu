@@ -1,89 +1,19 @@
-# CODEMAP — where to find code by topic
+# Code map
 
-Read this file **just-in-time** when orienting in the repo (same role as sabaki.dance's
-`.cursor/CODEMAP.md`). Rules and conventions: `.cursor/rules/index.mdc`; context-file layout:
-`.cursor/CONTEXT-CONVENTIONS.md`. Everything below is a flat Xcode target under
-`WhisperShortcut/` unless a directory is named. File names are the index — when a row and the
-tree disagree, the tree wins; fix the row.
+Canonical contributor rules: `AGENTS.md`.
 
-## Core flow
+| Topic | Location |
+|---|---|
+| Existing macOS application | `WhisperShortcut/` |
+| macOS orchestration/state | `WhisperShortcut/MenuBarController.swift`, `WhisperShortcut/AppState.swift`, `WhisperShortcut/SpeechService.swift` |
+| macOS providers | `WhisperShortcut/LLMChatProvider.swift`, provider-named Swift files |
+| macOS audio | `WhisperShortcut/AudioRecorder.swift`, `LiveMeetingRecorder.swift`, `SystemAudioCapture.swift` |
+| macOS tests and project | `WhisperShortcutTests/`, `WhisperShortcut.xcodeproj/` |
+| Ubuntu desktop prototype | `apps/linux/prototype/` |
+| Linux commands/checks | `scripts/linux/`, `docs/development/platform-commands.md` |
+| Approved migration | `plans/active/ubuntu-multiplatform-design.md`, `ubuntu-foundation-plan.md` |
+| Tooling dependencies | `docs/development/fork-tooling-inventory.md` |
 
-| Topic                                   | Start here                                                                                                          |
-| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| App state machine (single source)       | `AppState.swift` — always transition through it, never flip UI flags                                                |
-| Orchestration, menu bar, shortcuts      | `MenuBarController.swift`, `Shortcuts.swift`, `ShortcutConfig.swift`, `FnDictationToggle.swift`                     |
-| Dictate / Dictate Prompt / Read Aloud   | `SpeechService.swift` (transcribe, executePrompt, readSelectionAloud) → `TranscriptionProvider.swift`               |
-| Recording & chunking                    | `AudioRecorder.swift`, `ChunkedDictateRecorder.swift`, `AudioChunker.swift`, `AudioMerger.swift`, `AudioTranscoder.swift`, `Chunk*.swift` |
-| Streaming dictation                     | `DictateStreamingSession.swift`, `TranscriptMerger.swift`, `SpeechTextSanitizer.swift`, `TextProcessingUtility.swift` |
-| Dictate Live (text at cursor, Parakeet) | `LiveDictation.swift` (availability, joiner, drift), `LiveDictationSession.swift`, `toggleLiveDictation`/`performLiveDictation` in `MenuBarController.swift`, `ChunkedDictateRecorder.RotationPolicy` |
-| Offline dictation (WhisperKit)          | `LocalSpeechService.swift` — read its actor doc comment before touching speed; `ModelManager.swift`; `ParakeetBackend.swift` (recommended model) |
-| Text-to-speech                          | `ChunkTTSService.swift`, `SystemTTSService.swift`, `TTSPlaybackSession.swift`, `TextChunker.swift`                  |
-| Clipboard / paste at cursor             | `ClipboardManager.swift`, `AccessibilityPermissionManager.swift`, `PermissionStatusChecker.swift`                   |
-| Live meeting transcription              | `LiveMeetingRecorder.swift`, `LiveMeetingSession.swift`, `LiveMeetingTranscriptStore.swift`, `MeetingListService.swift` |
-| Screenshot                              | `ScreenshotSaveLocation.swift` (+ the screenshot path in `MenuBarController.swift`)                                 |
-| Feedback UI (pill / popups)             | `RecordingIndicatorWindow.swift`, `PopupNotificationWindow.swift`, `SpeechErrorFormatter.swift`, `AppErrors.swift`  |
-
-## Chat
-
-| Topic                                   | Start here                                                                                                          |
-| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| Provider abstraction + factory          | `LLMChatProvider.swift` (`LLMProviderFactory`); `ChatModelProvider` enum in `Settings/Shared/SettingsConfiguration.swift` |
-| Providers                               | `GeminiChatProvider.swift`, `OpenAIChatProvider.swift`, `GrokChatProvider.swift`, `AnthropicChatProvider.swift`, `LocalLLMChatProvider.swift`, `MLXChatProvider.swift`, `ChatGPTPlanChatProvider.swift` |
-| ChatGPT plan sign-in                    | `ChatGPTPlanOAuthService.swift`, `ChatGPTPlanOAuthConfig.swift`, `ChatGPTPlanCredentials.swift`, `ChatGPTPlanModelCatalog.swift`, `Settings/Shared/ChatGPTPlanConnectionSection.swift` |
-| Slash commands, model switching         | `ChatViewModel` in `ChatView.swift` (`commandsBeforeModels` / `commandsAfterModels` / `modelCommandLookup`), `ChatModelCommandResolver.swift`, `ModelSelectionReconciler.swift` |
-| MCP server for AI apps                  | `MCP/`                                                                                                              |
-| Mail                                    | `Mail/`                                                                                                             |
-| Telemetry                               | `Telemetry/`                                                                                                        |
-| Writing Style                           | `WritingStyle*.swift`, `WritingContextResolver.swift`                                                               |
-| Updates (Sparkle)                       | `UpdaterService.swift`                                                                                              |
-| Chat UI                                 | `ChatRootView.swift`, `ChatView.swift`, `ChatSidebar.swift`, `ChatComposerTextView.swift`, `ChatTheme.swift`, `ChatWindowController.swift`, `ChatWindowManager.swift`, `MessageActionButton.swift`, `MarkdownParsing.swift` |
-| Sessions, memory, search                | `ChatSessionStore.swift`, `ChatMemoryStore.swift`, `ChatSearch.swift`, `PromptConversationHistory.swift`            |
-| Tools (local, Google, Trello, docs)     | `ChatTools.swift` (`ChatToolRegistry`), `ChatToolTurnMemo.swift`, `Workspace*.swift` (context files, file tools, folders, map) |
-| Streaming hang protection               | `ChatStreamLoopGuard.swift`, `MainThreadWatchdog.swift` (writes `hang-*.txt`; skill `analyze-chat-freeze`)          |
-| OpenRouter connect (PKCE)               | `OpenRouterOAuthService.swift`, `OpenRouterOAuthConfig.swift`, `OpenRouterModelCatalog.swift`, `LoopbackOAuthListener.swift`, `OAuthCSRF.swift` |
-| Google account (Calendar/Tasks/Gmail)   | `GoogleAccountOAuthService.swift`, `GoogleCalendarOAuthConfig.swift`, `GoogleCalendarAPIClient.swift`, `GoogleTasksAPIClient.swift`, `GmailAPIClient.swift` |
-| Trello                                  | `TrelloOAuthService.swift`, `TrelloOAuthConfig.swift`, `TrelloAPIClient.swift`                                      |
-| Grounding links (YouTube)               | `YouTubeVideoLink.swift`                                                                                            |
-
-## Models, prompts, credentials
-
-| Topic                                   | Start here                                                                                                          |
-| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| Transcription model IDs                 | `TranscriptionModels.swift` — the list lives here, never in prose                                                   |
-| Prompt / TTS model IDs                  | `PromptModel`, `TTSModel` in `Settings/Shared/SettingsConfiguration.swift`                                          |
-| Gemini API client                       | `GeminiAPIClient.swift`, `GeminiCredentialProvider.swift`                                                           |
-| System prompts                          | `SystemPromptsStore.swift`, `AppConstants.swift` (skill `gemini-system-prompt-best-practices`)                      |
-| Keys & Keychain                         | `KeychainManager.swift`, `KeychainCredential.swift`, `ProviderCredentials.swift`, `CustomEndpointAuth.swift`        |
-| Networking resilience                   | `NetworkDeadline.swift`, `RetryBackoff.swift`, `RateLimitCoordinator.swift`, `ConnectionPrewarmer.swift`, `OfflineMode.swift` |
-| Local models (Ollama / LM Studio / MLX) | `LocalLLMModelManager.swift`, `MLXPromptCache.swift`, `MLXTransformersAdapters.swift`                               |
-
-## Smart Improvement & usage data
-
-| Topic                                   | Start here                                                                                                          |
-| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| Interaction / signal logging            | `ContextLogger.swift`, `ContextDerivation.swift`, `DebugRawResponses.swift`; paths in `AppSupportPaths.swift`, `Docs/data-directories.md` |
-| Smart Improvement                       | `SmartImprovementTypes.swift`, `SmartImprovementReviewView.swift`, `AutoPromptImprovementScheduler.swift`, `ImproveFromUsageAutoRunCoordinator.swift` |
-| Glossary learning                       | `GlossaryFastLearner.swift` (NSSpellChecker, main-thread only)                                                      |
-| Transcription history, usage report     | `TranscriptionHistoryStore.swift`, `UsageReport.swift`                                                              |
-| Review prompt (App Store rating)        | `ReviewPrompter.swift`                                                                                              |
-
-## Settings, onboarding, app shell
-
-| Topic                                   | Start here                                                                                                          |
-| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| Settings window & tabs                  | `SettingsView.swift`, `SettingsWindowController.swift`, `Settings/Tabs/*SettingsTab.swift`                          |
-| Settings model, keys, constants         | `Settings/Shared/` (`SettingsViewModel`, `SettingsConfiguration`, `SettingsConstants`, `SettingsSlot`), `SettingsManager.swift`, `UserDefaultsKeys.swift` |
-| Reusable settings components            | `Settings/Components/` (model grid/tiles, API-key chip + validator, shortcut recorder, prompt editors)              |
-| Onboarding                              | `Onboarding/` (`WelcomeView`, `WelcomeSteps`, `OnboardingTryItPanel`)                                               |
-| App entry, entitlements, privacy copy   | `FullApp.swift`, `Info.plist`, `*.entitlements`, `PrivacyCopy.swift`, `PRIVACY.md`, `FeedbackLinks.swift`           |
-| Logging                                 | `DebugLogger.swift` only — view with `bash scripts/logs.sh -t 5m`                                                   |
-
-## Outside the target
-
-| Topic                                   | Start here                                                                                                          |
-| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| Tests                                   | `WhisperShortcutTests/` — `bash scripts/run-tests.sh` (live suites carry `(live)` in the `@Suite` name)             |
-| Build / release / App Store             | `scripts/rebuild-and-restart.sh`, `scripts/create-release.sh`, `.cursor/commands/{release,submit-appstore}.md`      |
-| Scheduled loops & implementer           | `scripts/*-job.sh`, `scripts/implementer/`, `scripts/loop-prompt.sh`; architecture `plans/agent-loops.md`           |
-| Ledgers & queues                        | `plans/improvement-ledger.md`, `plans/loop-ledger.md`, `plans/implementer-queue.md`, `plans/instrumentation-gaps.md` |
-| Bundled docs the in-app Chat reads      | `README.md` → copied to `WhisperShortcut/Docs/README.md` by the rebuild script                                      |
+Mac source/project relocation is deferred until Mac verification is available.
+Original maintainer automation under scripts/plans is historical, not an active
+queue. No permanent OS branches are used.

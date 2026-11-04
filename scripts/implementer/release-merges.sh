@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Historical upstream automation; deliberately inactive in this fork.
+printf "%s\n" "This historical job is disabled in this fork; see AGENTS.md." >&2
+exit 2
 # Carry out the merge windows the runner opened — step 1 of the hourly tick.
 #
 #     bash scripts/implementer/release-merges.sh [--dry-run]

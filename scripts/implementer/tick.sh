@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Historical upstream automation; deliberately inactive in this fork.
+printf "%s\n" "This historical job is disabled in this fork; see AGENTS.md." >&2
+exit 2
 # The implementer's heartbeat — hourly under launchd.
 #
 # Architecture: plans/agent-loops.md. Ported from sabaki.dance's scripts/implementer/tick.sh,
