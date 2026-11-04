@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Historical upstream automation; deliberately inactive in this fork.
+printf "%s\n" "This historical job is disabled in this fork; see AGENTS.md." >&2
+exit 2
 # Autonomous implementer runner — `bash scripts/implementer/run-implementer.sh`.
 #
 # Takes the topmost BUILD/OPEN row from plans/implementer-queue.md, lets the build agent

@@ -1,4 +1,7 @@
 #!/bin/bash
+# Historical upstream automation; deliberately inactive in this fork.
+printf "%s\n" "This historical job is disabled in this fork; see AGENTS.md." >&2
+exit 2
 
 # Weekly usage-review job for WhisperShortcut.
 #

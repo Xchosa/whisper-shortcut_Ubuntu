@@ -1,9 +1,6 @@
 name: Build and Release
 
 on:
-  push:
-    tags:
-      - "v*"
   # Re-drive a tag that already exists. Six tags (v8.06..v8.11) failed to publish
   # and the only way back was `gh run rerun`, which needs the old run to still be
   # around. This does not need one.
@@ -25,6 +22,7 @@ permissions:
 
 jobs:
   hermetic-tests:
+    if: ${{ vars.FORK_RELEASES_ENABLED == 'true' }}
     name: Hermetic tests
     runs-on: macos-latest
     timeout-minutes: 45
@@ -44,6 +42,8 @@ jobs:
         run: bash scripts/run-tests.sh --hermetic
 
   build-and-release:
+    if: ${{ vars.FORK_RELEASES_ENABLED == 'true' }}
+    needs: hermetic-tests
     name: Build, Sign, Notarize, and Release
     runs-on: macos-latest
     timeout-minutes: 90

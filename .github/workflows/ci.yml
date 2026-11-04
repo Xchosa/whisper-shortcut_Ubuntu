@@ -16,6 +16,22 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  linux-foundation:
+    name: Ubuntu foundation tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Run headless Linux tests
+        run: bash scripts/linux/test.sh
+
+      - name: Check Python and shell syntax
+        run: |
+          /usr/bin/python3 -m compileall -q apps/linux/prototype
+          bash -n scripts/linux/probe-desktop.sh scripts/linux/run-prototype.sh scripts/linux/test.sh
+
   hermetic-tests:
     name: Hermetic tests
     runs-on: macos-latest

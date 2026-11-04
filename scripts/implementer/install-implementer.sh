@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Historical upstream automation; deliberately inactive in this fork.
+printf "%s\n" "This historical job is disabled in this fork; see AGENTS.md." >&2
+exit 2
 # Create ~/.config/whispershortcut-implementer/env for run-implementer.sh.
 # Idempotent — never overwrites an existing config. Architecture: plans/agent-loops.md.
 set -euo pipefail

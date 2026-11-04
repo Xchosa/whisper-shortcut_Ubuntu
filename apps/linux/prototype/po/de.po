@@ -1,0 +1,135 @@
+# Prototype-only singular messages. Production uses compiled gettext.
+msgid "WhisperShortcut — Desktop prototype"
+msgstr "WhisperShortcut — Desktop-Prototyp"
+
+msgid "Local tests only. Nothing is uploaded. Recording starts only when you request it."
+msgstr "Nur lokale Tests. Es wird nichts hochgeladen. Eine Aufnahme beginnt nur auf Ihre Anforderung."
+
+msgid "Idle"
+msgstr "Bereit"
+
+msgid "Finding audio sources…"
+msgstr "Audioquellen werden gesucht…"
+
+msgid "Microphone source"
+msgstr "Mikrofonquelle"
+
+msgid "System monitor source (default: @DEFAULT_MONITOR@)"
+msgstr "System-Monitorquelle (Standard: @DEFAULT_MONITOR@)"
+
+msgid "Record microphone"
+msgstr "Mikrofon aufnehmen"
+
+msgid "Record system audio"
+msgstr "Systemaudio aufnehmen"
+
+msgid "Record microphone + system audio"
+msgstr "Mikrofon und Systemaudio aufnehmen"
+
+msgid "Stop and finalize"
+msgstr "Stoppen und abschließen"
+
+msgid "Cancel / delete test audio"
+msgstr "Abbrechen / Testaudio löschen"
+
+msgid "Play last recording"
+msgstr "Letzte Aufnahme abspielen"
+
+msgid "Copy harmless test text"
+msgstr "Unverfänglichen Testtext kopieren"
+
+msgid "Shortcut setup"
+msgstr "Tastenkürzel einrichten"
+
+msgid "Test disposable keyring value"
+msgstr "Temporären Schlüsselbundeintrag testen"
+
+msgid "Cancel keyring test"
+msgstr "Schlüsselbundtest abbrechen"
+
+msgid "Quit"
+msgstr "Beenden"
+
+msgid "Keep running when the window closes"
+msgstr "Nach dem Schließen des Fensters weiterlaufen"
+
+msgid "Audio source discovery failed."
+msgstr "Die Suche nach Audioquellen ist fehlgeschlagen."
+
+msgid "No microphone sources found"
+msgstr "Keine Mikrofonquellen gefunden"
+
+msgid "Stop or cancel recording before closing."
+msgstr "Stoppen Sie die Aufnahme oder brechen Sie diese vor dem Schließen ab."
+
+msgid "Another recording is active."
+msgstr "Eine andere Aufnahme läuft bereits."
+
+msgid "Recording — use Stop to finalize or Cancel to delete."
+msgstr "Aufnahme läuft — mit Stoppen abschließen oder mit Abbrechen löschen."
+
+msgid "Audio capture failed. Check source, permissions and device availability."
+msgstr "Audioaufnahme fehlgeschlagen. Prüfen Sie Quelle, Berechtigungen und Geräteverfügbarkeit."
+
+msgid "Audio operation failed. Check device availability."
+msgstr "Audiovorgang fehlgeschlagen. Prüfen Sie die Geräteverfügbarkeit."
+
+msgid "Recording saved locally. Listen back to verify both content and sources."
+msgstr "Aufnahme lokal gespeichert. Hören Sie diese zur Prüfung der Inhalte und Quellen ab."
+
+msgid "Playback finished."
+msgstr "Wiedergabe beendet."
+
+msgid "Recording — seconds elapsed: {seconds}"
+msgstr "Aufnahme — vergangene Sekunden: {seconds}"
+
+msgid "Finalizing recording…"
+msgstr "Aufnahme wird abgeschlossen…"
+
+msgid "Audio finalization timed out; incomplete test audio was deleted."
+msgstr "Zeitüberschreitung beim Abschließen; unvollständiges Testaudio wurde gelöscht."
+
+msgid "Stop recording or playback first."
+msgstr "Stoppen Sie zuerst die Aufnahme oder Wiedergabe."
+
+msgid "No test recording available."
+msgstr "Keine Testaufnahme verfügbar."
+
+msgid "On GNOME: Settings → Keyboard → Custom Shortcuts. Bind the documented command ending in --toggle-recording. Do not register it until microphone recording works."
+msgstr "Unter GNOME: Einstellungen → Tastatur → Eigene Tastenkombinationen. Weisen Sie den dokumentierten Befehl mit --toggle-recording zu. Richten Sie dies erst nach erfolgreichem Mikrofontest ein."
+
+msgid "Keyring test already running."
+msgstr "Der Schlüsselbundtest läuft bereits."
+
+msgid "Testing a disposable keyring value…"
+msgstr "Ein temporärer Schlüsselbundeintrag wird getestet…"
+
+msgid "Disposable keyring value removed."
+msgstr "Temporärer Schlüsselbundeintrag entfernt."
+
+msgid "Keyring test passed; disposable value removed."
+msgstr "Schlüsselbundtest erfolgreich; temporärer Eintrag entfernt."
+
+msgid "Keyring test cancelled or failed; disposable item cleanup finished."
+msgstr "Schlüsselbundtest abgebrochen oder fehlgeschlagen; Bereinigung des temporären Eintrags abgeschlossen."
+
+msgid "Keyring cleanup failed; remove the prototype test item manually."
+msgstr "Schlüsselbundbereinigung fehlgeschlagen. Entfernen Sie den Testeintrag des Prototyps manuell."
+
+msgid "Disposable value matched."
+msgstr "Der temporäre Wert stimmt überein."
+
+msgid "Keyring verification failed."
+msgstr "Schlüsselbundprüfung fehlgeschlagen."
+
+msgid "Keyring test cancelled or unavailable."
+msgstr "Schlüsselbundtest abgebrochen oder nicht verfügbar."
+
+msgid "Cancelling keyring test; cleanup will follow."
+msgstr "Schlüsselbundtest wird abgebrochen; Bereinigung folgt."
+
+msgid "Wait for keyring cleanup before quitting."
+msgstr "Warten Sie vor dem Beenden auf die Schlüsselbundbereinigung."
+
+msgid "Stop or cancel recording before quitting."
+msgstr "Stoppen Sie die Aufnahme oder brechen Sie diese vor dem Beenden ab."

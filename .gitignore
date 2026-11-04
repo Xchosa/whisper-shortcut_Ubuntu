@@ -149,6 +149,9 @@ developer-id-cert.p12
 __pycache__/
 *.pyc
 
+# Disposable Linux desktop-prototype output (never commit audio/reports)
+apps/linux/prototype/output/
+
 # Business data belongs in the PRIVATE parent repo (see plans/README.md)
 plans/growth-ledger.md
 plans/growth-reviews/

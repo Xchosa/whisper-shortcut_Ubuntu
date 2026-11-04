@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Historical upstream automation; deliberately inactive in this fork.
+printf "%s\n" "This historical job is disabled in this fork; see AGENTS.md." >&2
+exit 2
 # The merge train — every 20 minutes under launchd.
 #
 # Why: a finished PR with green CI should not wait for somebody to click merge. Dependabot PRs

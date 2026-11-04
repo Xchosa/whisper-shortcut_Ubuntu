@@ -1,0 +1,64 @@
+Ubuntu foundation validation — 2026-11-04
+
+Command: env -u DISPLAY -u WAYLAND_DISPLAY -u DBUS_SESSION_BUS_ADDRESS bash scripts/linux/test.sh
+Exit: 0
+Full output (verbatim):
+
+test_historical_jobs_refuse_before_host_commands (test_tooling_guards.ToolingGuardsTests.test_historical_jobs_refuse_before_host_commands) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 0.023s
+
+OK
+test_authorized_deferred_capture_is_consumed_once (test_demo_lifecycle.DemoLifecycleTests.test_authorized_deferred_capture_is_consumed_once) ... ok
+test_cancel_revokes_capture_waiting_for_discovery (test_demo_lifecycle.DemoLifecycleTests.test_cancel_revokes_capture_waiting_for_discovery) ... ok
+test_capture_error_deletes_incomplete_audio (test_demo_lifecycle.DemoLifecycleTests.test_capture_error_deletes_incomplete_audio) ... ok
+test_close_revokes_capture_waiting_for_discovery (test_demo_lifecycle.DemoLifecycleTests.test_close_revokes_capture_waiting_for_discovery) ... ok
+test_deferred_capture_is_not_consumed_during_another_operation (test_demo_lifecycle.DemoLifecycleTests.test_deferred_capture_is_not_consumed_during_another_operation) ... ok
+test_playback_error_preserves_valid_audio_for_retry (test_demo_lifecycle.DemoLifecycleTests.test_playback_error_preserves_valid_audio_for_retry) ... ok
+test_repeated_shortcut_revokes_request_before_discovery (test_demo_lifecycle.DemoLifecycleTests.test_repeated_shortcut_revokes_request_before_discovery) ... ok
+test_stop_revokes_capture_waiting_for_discovery (test_demo_lifecycle.DemoLifecycleTests.test_stop_revokes_capture_waiting_for_discovery) ... ok
+test_cli_json_does_not_claim_functional_success (test_probe_report.ProbeReportTests.test_cli_json_does_not_claim_functional_success) ... ok
+test_installed_dependencies_do_not_prove_audio_or_shortcuts (test_probe_report.ProbeReportTests.test_installed_dependencies_do_not_prove_audio_or_shortcuts) ... ok
+test_missing_dependency_is_unavailable (test_probe_report.ProbeReportTests.test_missing_dependency_is_unavailable) ... ok
+test_missing_session_bus_is_blocked (test_probe_report.ProbeReportTests.test_missing_session_bus_is_blocked) ... ok
+test_report_contains_no_environment_values_or_device_identifiers (test_probe_report.ProbeReportTests.test_report_contains_no_environment_values_or_device_identifiers) ... ok
+test_report_schema (test_probe_report.ProbeReportTests.test_report_schema) ... ok
+test_timeout_is_handled_without_raw_exception (test_probe_report.ProbeReportTests.test_timeout_is_handled_without_raw_exception) ... ok
+
+----------------------------------------------------------------------
+Ran 15 tests in 0.578s
+
+OK
+
+Command: bash scripts/rebuild-and-restart.sh
+Exit: 127 (macOS toolchain unavailable on Ubuntu)
+Full output (verbatim):
+
+🔏 Signing: ad-hoc (no Apple Development identity; legacy keychain, prompts on rebuilds)
+📚 Syncing bundled docs...
+🔨 Building WhisperShortcut (configuration: Debug)...
+scripts/rebuild-and-restart.sh: line 174: xcodebuild: command not found
+
+Command: bash scripts/run-tests.sh --hermetic
+Exit: 127 (macOS toolchain unavailable on Ubuntu)
+Full output (verbatim):
+
+ℹ️  Hermetic run — not loading .env; live-network tests are skipped.
+🧪 Running WhisperShortcut tests...
+   Scheme:    WhisperShortcut-AppStore
+   Test plan: WhisperShortcut-Hermetic
+
+scripts/run-tests.sh: line 207: xcodebuild: command not found
+
+Isolated GTK smoke on corrected code: exit 0
+GTK window rendered; main-loop timer fired; no recording started.
+
+Python compileall, shell syntax and whitespace checks: exit 0.
+YAML parse, manual release trigger/job gates and contributor symlinks validated.
+English/German window screenshots inspected; not committed as runtime artifacts.
+
+Pending: real recording/listening, keyring unlock/cancellation, cross-app
+clipboard, shortcut recording activation, Mac runtime verification.
+Independent reviewer: gpt-6-astra; two Important findings fixed RED→GREEN.
+No Critical findings or deferred minors. No claim of production readiness.
