@@ -1,6 +1,6 @@
 # macOS and Ubuntu repository design
 
-Status: DRAFT — awaiting user review; no implementation authorized by this document.
+Status: APPROVED — user approval on 2026-11-04; merged in PR #1. Foundation implementation plan: `plans/active/ubuntu-foundation-plan.md`.
 Date: 2026-11-04
 
 ## Intent and agreed scope
