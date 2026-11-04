@@ -74,7 +74,7 @@ def collect_report() -> dict:
     dependencies = {
         "gtk": gi_dependency("Gtk", "4.0", "print(f'{Gtk.get_major_version()}.{Gtk.get_minor_version()}.{Gtk.get_micro_version()}')"),
         "gstreamer": gi_dependency("Gst", "1.0", "Gst.init(None); print('.'.join(map(str, Gst.version()[:3])))"),
-        "libsecret": gi_dependency("Secret", "1", "print('1')"),
+        "libsecret": gi_dependency("Secret", "1", "print(f'{Secret.MAJOR_VERSION}.{Secret.MINOR_VERSION}.{Secret.MICRO_VERSION}')"),
     }
     bus_status, interfaces = bus_interfaces("org.freedesktop.portal.Desktop",
                                            "/org/freedesktop/portal/desktop")
