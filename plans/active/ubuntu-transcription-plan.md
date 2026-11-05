@@ -1,0 +1,81 @@
+# Ubuntu OpenRouter Transcription Implementation Plan
+
+> **For agentic workers:** Use superpowers:executing-plans for native implementation and a fresh whole-branch review. Track checkbox steps and preserve the execution ledger.
+
+**Goal:** Let the existing, user-validated Ubuntu recorder explicitly transcribe its last WAV through OpenRouter and display/copy the result.
+
+**Architecture:** Extend the desktop prototype with small standard-library modules for development configuration, HTTPS transcription and a cancellable background job. GTK owns display state and rejects stale job results. This is the next bounded slice of the approved cloud-first dictation design, not production meetings or a full application rewrite.
+
+**Tech Stack:** Python 3.12, existing GTK4/GStreamer, stdlib HTTPS/JSON/threading/unittest.
+
+**Spec:** plans/active/ubuntu-multiplatform-design.md; user confirmed recordings work and explicitly requested proceeding with the configured OpenRouter environment on 2026-11-05.
+
+## Global constraints
+
+- Use the existing native execution preference. The user's “mache weiter, env is geaendert” authorizes this slice; no repeated scope approval.
+- Read env/.env as development input only. Never copy/commit the real file, print keys, source it as shell code, or fall back to GENERATION_MODEL for audio.
+- Keep OPENROUTER_API_KEY and OPENROUTER_TRANSCRIPTION_MODEL separate; user configured openai/whisper-large-v3-turbo. Validate against current official OpenRouter docs.
+- No cloud request on launch, Stop, or playback. The explicit Transcribe recording button discloses upload to OpenRouter.
+- Keep all network/file processing off the GTK loop. Cancel/timeout invalidate queued callbacks, attempt to close the connection and preserve the completed recording for retry.
+- Reject oversized/invalid WAV and recordings longer than five minutes. Long-meeting segmentation is a later slice; do not silently truncate.
+- UI remains English with German translations. No automatic clipboard writes or transcript logging.
+- No new third-party Python dependency. No Mac runtime or workflow edits.
+
+## Review focus
+
+1. Malicious/malformed env lines must never execute code or expose credentials: Task 1.
+2. HTTP errors, redirects, malformed/large/empty responses must yield fixed redacted errors: Task 2.
+3. Cancel before upload, timeout and callbacks delivered after cancellation/new jobs must not update UI or clipboard: Tasks 2–3.
+4. New recording/playback/delete/quit while transcribing must preserve audio and respect state: Task 3.
+5. Worktree launch must use the user's main-checkout env without copying secrets: Tasks 1/3/4.
+
+## Task 1: Development configuration
+
+Files: create apps/linux/prototype/transcription_config.py and tests/test_transcription_config.py; create env/.env.example containing placeholders only.
+
+Produces load_config(env_file: Path | None = None) -> TranscriptionConfig, with api_key excluded from repr, explicit model and fixed ConfigError messages.
+
+- [ ] Test simple/quoted/export assignments, process-env precedence, missing file/key/model, invalid syntax, no shell interpolation/execution and secret-free repr/errors. Watch failure before implementation.
+- [ ] Implement a bounded simple KEY=value parser; only process-environment or explicit/local development env input. Reject control characters in keys/model and invalid model slugs.
+- [ ] Run the full Linux suite and commit configuration independently.
+
+## Task 2: HTTPS adapter and background lifecycle
+
+Files: create openrouter_transcription.py, transcription_job.py and their tests under apps/linux/prototype/.
+
+Produces transcribe(path, config, cancelled, attach_connection) -> str; TranscriptionError.code/message; TranscriptionJob.start()/cancel() with dispatch(callback) and done(job,text,error).
+
+- [ ] Test real WAV validation, base64 JSON and Bearer request shape against an injected fake connection; no live requests in unit tests.
+- [ ] Test 401/402/403/429/5xx, redirects, invalid/empty JSON/text, response/audio size caps, five-minute duration cap, socket timeout, cancellation before request and connection cleanup. Errors must exclude provider body/key.
+- [ ] Test success, cancellation, queued-result suppression, deadline and background completion using deterministic events. Use a 65-second overall UI deadline and bounded socket operations.
+- [ ] Implement only the official fixed HTTPS endpoint https://openrouter.ai/api/v1/audio/transcriptions, with no redirects or automatic retries.
+- [ ] Run all Linux tests and commit.
+
+## Task 3: GTK transcription workflow
+
+Files: modify desktop_demo.py, tests/test_demo_lifecycle.py, po/de.po and scripts/linux/run-prototype.sh.
+
+- [ ] Add headless regression tests for active-operation rejection, cancel preserving audio, stale result rejection and explicit copy only. Keep existing deferred-recording tests.
+- [ ] Add a read-only transcript area, explicit cloud Transcribe recording and Copy transcript controls. Make the content scrollable; replace the previous local-only disclosure.
+- [ ] Integrate background jobs with GTK dispatch, identity-checked callbacks and a single active operation. Clear old text only when starting a new recording; preserve the recording on errors/cancel.
+- [ ] Resolve the development env in the main checkout via Git common dir in the run wrapper; explicit WHISPER_SHORTCUT_ENV_FILE/process env overrides remain possible. Never source the file.
+- [ ] Run full headless tests, shell/Python checks, English/German rendering, then commit.
+
+## Task 4: Live validation, documentation and delivery
+
+Files: update prototype README, platform commands, desktop evidence and design implementation status; add a validation report with verbatim output.
+
+- [ ] Start/restart only after confirming no recording is interrupted. User already confirmed the old window closed.
+- [ ] Use a short synthetic WAV for an explicitly authorized live API check, if speech synthesis is available; otherwise user-triggered recording is the live check. Do not upload existing personal recordings automatically.
+- [ ] Record actual provider outcomes, not inferred success. Verify no secret/audio/transcript artifacts are staged.
+- [ ] Independent whole-branch review; fix Important/Critical findings with regression tests; run full checks.
+- [ ] Commit explicit files, push feature branch, create draft PR, report actual checks and remaining prototype limitations. Never merge or release.
+
+## References verified
+
+- https://openrouter.ai/blog/tutorials/transcription-on-openrouter/
+- https://openrouter.ai/openai/whisper-large-v3-turbo
+
+User-confirmed recording functionality is sufficient to implement this short-WAV
+slice. System-audio mixing/headphone edge cases, keyring UI, production recovery,
+chat and read-aloud remain separate work; this slice does not grade them complete.
