@@ -15,6 +15,9 @@ gi.require_version("Gdk", "4.0")
 gi.require_version("Gst", "1.0")
 gi.require_version("Secret", "1")
 from gi.repository import Gdk, Gio, GLib, Gst, Gtk, Secret
+from transcription_config import ConfigError, load_config
+from transcription_client import TranscriptionError
+from transcription_job import TranscriptionJob
 
 Gst.init(None)
 APP_ID = "io.github.Xchosa.WhisperShortcut.Prototype"
@@ -66,6 +69,9 @@ class Demo(Gtk.Application):
         self.keyring_cancel = None
         self.pending_quit = False
         self.pending_toggle = False
+        self.transcription_task = None
+        self.transcript_text = ""
+        self.visible_provider = "local"
 
     def do_command_line(self, command_line):
         options = command_line.get_options_dict()
@@ -89,17 +95,26 @@ class Demo(Gtk.Application):
         if self.window:
             self.window.present()
             return
-        self.window = Gtk.ApplicationWindow(application=self, title=_("WhisperShortcut — Desktop prototype"))
-        self.window.set_default_size(620, 640)
+        self.window = Gtk.ApplicationWindow(application=self, title=_("WhisperShortcut — Transcription prototype"))
+        self.window.set_default_size(700, 820)
         self.window.connect("close-request", self.close_window)
         box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12,
                       margin_top=20, margin_bottom=20, margin_start=20, margin_end=20)
-        self.window.set_child(box)
-        warning = Gtk.Label(label=_("Local tests only. Nothing is uploaded. Recording starts only when you request it."),
+        page = Gtk.ScrolledWindow()
+        page.set_child(box)
+        self.window.set_child(page)
+        warning = Gtk.Label(label=_("Transcription uses the local container by default. OpenRouter requires explicit cloud configuration. Nothing is transcribed until you click Transcribe."),
                             wrap=True, xalign=0)
         box.append(warning)
         self.status = Gtk.Label(label=_("Idle"), wrap=True, xalign=0)
         box.append(self.status)
+        box.append(Gtk.Label(label=_("Transcript"), xalign=0))
+        transcript = Gtk.TextView(editable=False, wrap_mode=Gtk.WrapMode.WORD_CHAR)
+        transcript.set_tooltip_text(_("Transcript history is not saved. Copy your text before quitting."))
+        self.transcript_buffer = transcript.get_buffer()
+        transcript_scroll = Gtk.ScrolledWindow(min_content_height=140)
+        transcript_scroll.set_child(transcript)
+        box.append(transcript_scroll)
         self.microphone = Gtk.DropDown.new_from_strings([_("Finding audio sources…")])
         self.microphone.set_tooltip_text(_("Microphone source"))
         box.append(self.microphone)
@@ -112,8 +127,10 @@ class Demo(Gtk.Application):
             ("Record system audio", lambda *_: self.start_capture("system")),
             ("Record microphone + system audio", lambda *_: self.start_capture("combined")),
             ("Stop and finalize", lambda *_: self.stop()),
-            ("Cancel / delete test audio", lambda *_: self.cancel()),
+            ("Cancel operation", lambda *_: self.cancel()),
             ("Play last recording", lambda *_: self.play()),
+            ("Transcribe recording", lambda *_: self.transcribe_recording()),
+            ("Copy transcript", lambda *_: self.copy_transcript()),
             ("Copy harmless test text", lambda *_: self.window.get_clipboard().set("WhisperShortcut clipboard test")),
             ("Shortcut setup", lambda *_: self.shortcut_help()),
             ("Test disposable keyring value", lambda *_: self.keyring_test()),
@@ -121,11 +138,17 @@ class Demo(Gtk.Application):
             ("Quit", lambda *_: self.request_quit()),
         ]:
             button = Gtk.Button(label=_(label))
+            if label == "Transcribe recording":
+                self.transcribe_button = button
             button.connect("clicked", callback)
             box.append(button)
         self.background = Gtk.CheckButton(label=_("Keep running when the window closes"))
         self.background.connect("toggled", self.background_changed)
         box.append(self.background)
+        try:
+            self.show_provider(load_config())
+        except ConfigError as error:
+            self.say(str(error))
         self.window.present()
         GLib.timeout_add(250, self.tick)
         if self.smoke:
@@ -170,6 +193,9 @@ class Demo(Gtk.Application):
 
     def close_window(self, *_):
         self.pending_toggle = False
+        if self.state == "transcribing":
+            self.say("Cancel transcription before closing.")
+            return True
         if self.state in {"recording", "stopping"}:
             self.say("Stop or cancel recording before closing.")
             return True
@@ -190,6 +216,8 @@ class Demo(Gtk.Application):
         if mode != "system" and index >= len(self.devices):
             self.say("No microphone sources found")
             return
+        self.transcript_text = ""
+        self.transcript_buffer.set_text("")
         self.delete_audio()
         self.audio_path = Path(self.scratch.name) / (uuid.uuid4().hex + ".wav")
         self.audio_path.touch(mode=0o600)
@@ -261,6 +289,9 @@ class Demo(Gtk.Application):
 
     def stop(self):
         self.pending_toggle = False
+        if self.state == "transcribing":
+            self.cancel_transcription()
+            return
         if self.state == "recording":
             self.state = "stopping"
             self.say("Finalizing recording…")
@@ -295,11 +326,78 @@ class Demo(Gtk.Application):
 
     def cancel(self, delete_audio=True):
         self.pending_toggle = False
+        if self.state == "transcribing":
+            self.cancel_transcription()
+            return
         self.release_pipeline()
         self.state = "idle"
         if delete_audio:
             self.delete_audio()
         self.say("Idle")
+
+    def show_provider(self, config):
+        self.visible_provider = config.provider
+        label = ("Transcribe recording (local CPU)" if config.provider == "local"
+                 else "Transcribe recording (OpenRouter cloud)")
+        self.transcribe_button.set_label(_(label))
+
+    def transcribe_recording(self):
+        if self.state != "idle":
+            self.say("Another operation is active.")
+            return
+        if not self.audio_path or not self.audio_path.exists():
+            self.say("No completed recording is available.")
+            return
+        try:
+            config = load_config()
+        except ConfigError as error:
+            self.say(str(error))
+            return
+        if config.provider != self.visible_provider:
+            self.show_provider(config)
+            self.say("Provider changed. Review the displayed provider, then press Transcribe again.")
+            return
+        job = TranscriptionJob(self.audio_path, config,
+                               lambda callback: GLib.idle_add(callback),
+                               self.finish_transcription)
+        self.transcription_task = job
+        self.state = "transcribing"
+        self.say("Transcribing locally…" if config.provider == "local" else "Transcribing with OpenRouter…")
+        try:
+            job.start()
+        except Exception:
+            self.cancel_transcription()
+            self.say("Transcription could not start. Your recording is kept for retry.")
+
+    def finish_transcription(self, job, text, error):
+        if self.transcription_task is not job or self.state != "transcribing":
+            return
+        self.transcription_task = None
+        self.state = "idle"
+        if error:
+            self.say(TranscriptionError(error).message)
+            return
+        if not isinstance(text, str) or not text.strip():
+            self.say(TranscriptionError("response").message)
+            return
+        self.transcript_text = text
+        self.transcript_buffer.set_text(text)
+        self.say("Transcription complete. Use Copy transcript to copy it.")
+
+    def cancel_transcription(self):
+        job = self.transcription_task
+        self.transcription_task = None  # Invalidate queued callbacks before closing transport.
+        if job:
+            job.cancel()
+        self.state = "idle"
+        self.say("Transcription cancelled. Your recording is kept for retry.")
+
+    def copy_transcript(self):
+        if not self.transcript_text:
+            self.say("No transcript is available.")
+            return
+        self.window.get_clipboard().set(self.transcript_text)
+        self.say("Transcript copied.")
 
     def play(self):
         if self.state != "idle":
@@ -378,6 +476,9 @@ class Demo(Gtk.Application):
 
     def request_quit(self):
         self.pending_toggle = False
+        if self.state == "transcribing":
+            self.say("Cancel transcription before quitting.")
+            return
         if self.keyring_cancel:
             self.cancel_keyring()
             self.say("Wait for keyring cleanup before quitting.")
@@ -406,6 +507,8 @@ class Demo(Gtk.Application):
 
     def do_shutdown(self):
         self.pending_toggle = False
+        if self.transcription_task:
+            self.cancel_transcription()
         self.release_pipeline()
         self.scratch.cleanup()
         Gtk.Application.do_shutdown(self)
