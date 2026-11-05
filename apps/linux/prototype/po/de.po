@@ -244,3 +244,12 @@ msgstr "Das lokale Modell ist beschäftigt. Versuchen Sie es in Kürze erneut."
 
 msgid "The local transcription service rejected the request or could not transcribe it."
 msgstr "Der lokale Transkriptionsdienst hat die Anfrage abgelehnt oder konnte sie nicht transkribieren."
+
+msgid "Delete recording"
+msgstr "Aufnahme löschen"
+
+msgid "Stop or cancel the active operation before deleting the recording."
+msgstr "Stoppen Sie den aktiven Vorgang oder brechen Sie diesen vor dem Löschen der Aufnahme ab."
+
+msgid "Recording deleted."
+msgstr "Aufnahme gelöscht."

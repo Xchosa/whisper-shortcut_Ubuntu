@@ -15,7 +15,7 @@ def demo_type():
     original = next(node for node in tree.body if isinstance(node, ast.ClassDef) and node.name == "Demo")
     names = {"cancel", "delete_audio", "stop", "set_sources", "message",
              "do_command_line", "close_window", "transcribe_recording",
-             "finish_transcription", "cancel_transcription", "copy_transcript"}
+             "finish_transcription", "cancel_transcription", "copy_transcript", "delete_recording"}
     # Execute these exact methods, isolating only GTK's inheritance/import boundary.
     original.bases = []
     original.body = [node for node in original.body if isinstance(node, ast.FunctionDef) and node.name in names]
@@ -167,3 +167,23 @@ class DemoLifecycleTests(unittest.TestCase):
         self.demo.background.get_active = lambda: (_ for _ in ()).throw(
             AssertionError("must not hide while transcribing"))
         self.assertTrue(self.demo.close_window())
+
+    def test_cancel_when_idle_preserves_completed_recording(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "valid.wav"
+            path.write_bytes(b"synthetic")
+            self.demo.audio_path = path
+            self.demo.cancel()
+            self.assertTrue(path.exists())
+
+    def test_deleting_recording_requires_idle_state(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "valid.wav"
+            path.write_bytes(b"synthetic")
+            self.demo.audio_path = path
+            self.demo.state = "transcribing"
+            self.demo.delete_recording()
+            self.assertTrue(path.exists())
+            self.demo.state = "idle"
+            self.demo.delete_recording()
+            self.assertFalse(path.exists())

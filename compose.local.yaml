@@ -15,8 +15,3 @@ services:
       - ALL
     security_opt:
       - no-new-privileges:true
-    networks:
-      - local-stt
-networks:
-  local-stt:
-    internal: true

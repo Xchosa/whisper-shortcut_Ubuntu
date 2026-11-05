@@ -12,9 +12,11 @@ import uuid
 import gi
 gi.require_version("Gtk", "4.0")
 gi.require_version("Gdk", "4.0")
+gi.require_version("Gsk", "4.0")
 gi.require_version("Gst", "1.0")
 gi.require_version("Secret", "1")
-from gi.repository import Gdk, Gio, GLib, Gst, Gtk, Secret
+# Load Gsk explicitly so PyGObject can marshal snapshot node subclasses.
+from gi.repository import Gdk, Gio, GLib, Gsk, Gst, Gtk, Secret
 from transcription_config import ConfigError, load_config
 from transcription_client import TranscriptionError
 from transcription_job import TranscriptionJob
@@ -129,6 +131,7 @@ class Demo(Gtk.Application):
             ("Stop and finalize", lambda *_: self.stop()),
             ("Cancel operation", lambda *_: self.cancel()),
             ("Play last recording", lambda *_: self.play()),
+            ("Delete recording", lambda *_: self.delete_recording()),
             ("Transcribe recording", lambda *_: self.transcribe_recording()),
             ("Copy transcript", lambda *_: self.copy_transcript()),
             ("Copy harmless test text", lambda *_: self.window.get_clipboard().set("WhisperShortcut clipboard test")),
@@ -258,7 +261,7 @@ class Demo(Gtk.Application):
                 raise RuntimeError("Audio start failed")
             self.say("Recording — use Stop to finalize or Cancel to delete.")
         except Exception:
-            self.cancel()
+            self.cancel(delete_audio=True)
             self.say("Audio capture failed. Check source, permissions and device availability.")
 
     def watch_pipeline(self):
@@ -324,16 +327,25 @@ class Demo(Gtk.Application):
             self.audio_path.unlink(missing_ok=True)
             self.audio_path = None
 
-    def cancel(self, delete_audio=True):
+    def cancel(self, delete_audio=None):
         self.pending_toggle = False
         if self.state == "transcribing":
             self.cancel_transcription()
             return
+        if delete_audio is None:
+            delete_audio = self.state in {"recording", "stopping"}
         self.release_pipeline()
         self.state = "idle"
         if delete_audio:
             self.delete_audio()
         self.say("Idle")
+
+    def delete_recording(self):
+        if self.state != "idle":
+            self.say("Stop or cancel the active operation before deleting the recording.")
+            return
+        self.delete_audio()
+        self.say("Recording deleted.")
 
     def show_provider(self, config):
         self.visible_provider = config.provider

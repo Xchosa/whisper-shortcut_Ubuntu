@@ -26,7 +26,7 @@ class TranscriptionError(Exception):
         "provider": "OpenRouter rejected the audio or model, or the provider is unavailable.",
         "network": "The transcription connection failed. Your recording is kept for retry.",
         "timeout": "Transcription timed out. Your recording is kept for retry.",
-        "response": "OpenRouter returned an invalid or empty transcript.",
+        "response": "The transcription service returned an invalid or empty transcript.",
         "local_unavailable": "The local transcription container is unavailable. Start it with the documented command.",
         "local_busy": "The local model is busy. Try again shortly.",
         "local_service": "The local transcription service rejected the request or could not transcribe it.",

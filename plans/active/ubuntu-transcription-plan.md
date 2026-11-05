@@ -14,7 +14,7 @@
 
 User requested: “probier erst mit einer localen variante es auch zu loesen, also einen extra container”. Local transcription now takes priority over the original cloud-first development slice. Implement a dedicated faster-whisper 1.2.1 container with multilingual base, CPU INT8, a model pinned to revision ebe41f70d5b6dfa9166e2c581c45c9c0cfc57b66, and host binding 127.0.0.1:8765. No automatic cloud fallback and no OpenRouter live request. The API's availability has not been tested; do not claim it failed.
 
-Default TRANSCRIPTION_PROVIDER=local. Optional local URL/model settings; remote mode requires explicit TRANSCRIPTION_PROVIDER=openrouter plus its existing key/model. Do not change the user's real env file. Runtime model loads are offline; build downloads packages/weights. Use a build context limited to service files, without credentials, and an internal runtime Docker network.
+Default TRANSCRIPTION_PROVIDER=local. Optional local URL/model settings; remote mode requires explicit TRANSCRIPTION_PROVIDER=openrouter plus its existing key/model. Do not change the user's real env file. Runtime model loads are offline; build downloads packages/weights. Use a build context limited to service files, without credentials, and host-loopback-only port publication. Docker Desktop did not publish the port on an internal network; runtime model loading is offline through local_files_only and HF_HUB_OFFLINE, not an egress firewall.
 
 ## Global constraints
 
