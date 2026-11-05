@@ -5,7 +5,7 @@ import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from transcription_config import TranscriptionConfig
-from openrouter_transcription import TranscriptionError
+from transcription_client import TranscriptionError
 from transcription_job import TranscriptionJob
 
 

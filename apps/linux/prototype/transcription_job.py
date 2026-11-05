@@ -1,6 +1,6 @@
 """One cancellable background request; terminal outcomes are published once."""
 import threading
-from openrouter_transcription import REQUEST_TIMEOUT, TranscriptionError, transcribe
+from transcription_client import REQUEST_TIMEOUT, TranscriptionError, transcribe
 
 
 class TranscriptionJob:

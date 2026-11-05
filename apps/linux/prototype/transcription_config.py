@@ -4,8 +4,10 @@ import os
 from pathlib import Path
 import re
 import shlex
+from urllib.parse import urlsplit
 
-CONFIG_KEYS = {"OPENROUTER_API_KEY", "OPENROUTER_TRANSCRIPTION_MODEL"}
+CONFIG_KEYS = {"OPENROUTER_API_KEY", "OPENROUTER_TRANSCRIPTION_MODEL",
+               "TRANSCRIPTION_PROVIDER", "LOCAL_TRANSCRIPTION_URL", "LOCAL_TRANSCRIPTION_MODEL"}
 MAX_CONFIG_BYTES = 65536
 
 
@@ -25,6 +27,26 @@ class ConfigError(Exception):
 class TranscriptionConfig:
     api_key: str = field(repr=False)
     model: str
+    provider: str = field(default="openrouter", init=False)
+
+
+@dataclass(frozen=True)
+class LocalTranscriptionConfig:
+    model: str = "base"
+    base_url: str = "http://127.0.0.1:8765"
+    provider: str = field(default="local", init=False)
+
+
+def local_address(base_url):
+    try:
+        parsed = urlsplit(base_url)
+        if (parsed.scheme != "http" or parsed.hostname not in {"localhost", "127.0.0.1", "::1"}
+                or parsed.username or parsed.password or parsed.query or parsed.fragment
+                or parsed.path not in {"", "/"} or (parsed.port is not None and parsed.port < 1)):
+            raise ValueError()
+        return parsed.hostname, parsed.port or 80
+    except ValueError:
+        raise ConfigError("invalid_config") from None
 
 
 def read_env_file(path: Path) -> dict[str, str]:
@@ -61,7 +83,7 @@ def read_env_file(path: Path) -> dict[str, str]:
     return values
 
 
-def load_config(env_file: Path | None = None) -> TranscriptionConfig:
+def load_config(env_file: Path | None = None) -> TranscriptionConfig | LocalTranscriptionConfig:
     if env_file is None:
         explicit = os.environ.get("WHISPER_SHORTCUT_ENV_FILE")
         env_file = Path(explicit) if explicit else Path(__file__).resolve().parents[3] / "env/.env"
@@ -69,6 +91,16 @@ def load_config(env_file: Path | None = None) -> TranscriptionConfig:
     for key in CONFIG_KEYS:
         if key in os.environ:
             values[key] = os.environ[key]
+    provider = values.get("TRANSCRIPTION_PROVIDER", "local")
+    if provider == "local":
+        url = values.get("LOCAL_TRANSCRIPTION_URL", "http://127.0.0.1:8765")
+        model = values.get("LOCAL_TRANSCRIPTION_MODEL", "base")
+        local_address(url)
+        if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]*", model):
+            raise ConfigError("invalid_config")
+        return LocalTranscriptionConfig(model=model, base_url=url)
+    if provider != "openrouter":
+        raise ConfigError("invalid_config")
     key = values.get("OPENROUTER_API_KEY", "")
     model = values.get("OPENROUTER_TRANSCRIPTION_MODEL", "")
     if not key:

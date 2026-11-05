@@ -13,7 +13,7 @@ import wave
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from transcription_config import TranscriptionConfig
-from openrouter_transcription import TranscriptionError, transcribe
+from transcription_client import TranscriptionError, transcribe
 
 
 def wav_bytes(frames=160, rate=16000):
@@ -103,7 +103,7 @@ class OpenRouterTranscriptionTests(unittest.TestCase):
                 with self.assertRaises(TranscriptionError) as error:
                     self.call(Connection(Response(body=body)))
                 self.assertEqual(error.exception.code, "response")
-        with patch("openrouter_transcription.MAX_RESPONSE_BYTES", 16):
+        with patch("transcription_client.MAX_RESPONSE_BYTES", 16):
             with self.assertRaises(TranscriptionError):
                 self.call(Connection(Response(body=b" " * 17)))
 
@@ -120,7 +120,7 @@ class OpenRouterTranscriptionTests(unittest.TestCase):
         self.assertEqual(error.exception.code, "missing_audio")
 
     def test_rejects_audio_size_and_duration_before_request(self):
-        with patch("openrouter_transcription.MAX_AUDIO_BYTES", 32):
+        with patch("transcription_client.MAX_AUDIO_BYTES", 32):
             with self.assertRaises(TranscriptionError) as error:
                 self.call(Connection())
             self.assertEqual(error.exception.code, "audio_too_large")
@@ -177,4 +177,3 @@ class OpenRouterTranscriptionTests(unittest.TestCase):
         with self.assertRaises(TranscriptionError):
             self.call(ClosingConnection("unused.invalid"))
         self.assertEqual(sent, [], "HTTPConnection must not reopen after cancellation")
-
