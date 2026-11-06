@@ -57,3 +57,19 @@ for relocation verification. Existing secret-free Mac CI remains enabled.
 - [Global shortcut portal](https://flatpak.github.io/xdg-desktop-portal/docs/doc-org.freedesktop.portal.GlobalShortcuts.html)
 
 Documentation defines APIs; it does not prove this desktop's functional support.
+
+## Local transcription follow-up — 2026-11-05
+
+The user confirmed recordings work. The local CPU base model now transcribed the
+public faster-whisper JFK fixture through the actual loopback client in 2.54 s.
+A real GTK job displayed that result while 44 main-loop heartbeats fired.
+No private recording, microphone capture, cloud request or API key was involved.
+The initial decoder test exposed PyAV 19.0.2 incompatibility with faster-whisper
+1.2.1; pinning PyAV 16.0.1 and adding a Docker build-time WAV decode check fixed it.
+Docker Desktop did not publish ports on the internal network; a normal bridge
+with host 127.0.0.1:8765 is used. Runtime weights load locally/offline, while the
+container itself is not protected by an egress firewall.
+
+User speech accuracy, system mixing/headphones, keyring and GNOME shortcut edge
+cases remain separate checks. OpenRouter is retained as explicit opt-in and is
+not live-tested. See the current prototype README for exact controls and limits.

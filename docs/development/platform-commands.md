@@ -2,11 +2,12 @@
 
 ## Ubuntu 24.04 / GNOME / Wayland
 
-The Linux work is a disposable desktop integration prototype, not feature parity.
+The Linux work is a recording/transcription prototype with a separate local CPU container, not full feature parity.
 The following scripts are introduced by the foundation work:
 
 ```bash
 bash scripts/linux/probe-desktop.sh --json
+bash scripts/linux/start-local-transcription.sh
 bash scripts/linux/run-prototype.sh
 bash scripts/linux/test.sh
 ```
@@ -38,3 +39,6 @@ unset by this work. No release is requested or authorized here.
 Original scheduled job and installer entry points refuse execution in this fork
 with exit 2, before host commands. Their bodies, dependencies, reports and gate
 values remain for history. No host jobs are installed or uninstalled.
+
+Local inference setup, provider selection, five-minute limits and data lifetime:
+`apps/linux/prototype/README.md`. Dockerfile build context excludes env files.

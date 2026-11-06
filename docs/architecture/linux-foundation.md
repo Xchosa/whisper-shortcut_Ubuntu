@@ -37,3 +37,15 @@ Finish the manual evidence table, then prepare the production shell/dictation
 plan against demonstrated adapters. Chat, read-aloud and meeting transcription
 remain part of the first usable release and follow the foundation plan's
 continuation map.
+
+## Implemented transcription slice — 2026-11-05
+
+The user requested local inference first, overriding cloud-first ordering for
+this development slice. The GTK recorder now uses a dedicated faster-whisper
+CPU/base container by default, with explicit background transcription and copy.
+Configuration, bounded HTTP transport and job cancellation live in separate
+prototype modules. Development env input is explicitly supported; no production
+keyring migration is performed. Local requests carry no cloud Authorization.
+There is no automatic provider fallback. Live local public-fixture and GUI
+roundtrips passed. Full production persistence, long meetings, chat and TTS remain
+future work under the approved overall design.

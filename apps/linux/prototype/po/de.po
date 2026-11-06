@@ -133,3 +133,123 @@ msgstr "Warten Sie vor dem Beenden auf die Schlüsselbundbereinigung."
 
 msgid "Stop or cancel recording before quitting."
 msgstr "Stoppen Sie die Aufnahme oder brechen Sie diese vor dem Beenden ab."
+
+msgid "WhisperShortcut — Transcription prototype"
+msgstr "WhisperShortcut — Transkriptionsprototyp"
+
+msgid "Transcription uses the local container by default. OpenRouter requires explicit cloud configuration. Nothing is transcribed until you click Transcribe."
+msgstr "Die Transkription verwendet standardmäßig den lokalen Container. OpenRouter erfordert eine ausdrückliche Cloud-Konfiguration. Die Transkription startet erst mit einem Klick auf Transkribieren."
+
+msgid "Transcript"
+msgstr "Transkript"
+
+msgid "Transcript history is not saved. Copy your text before quitting."
+msgstr "Ein Transkriptverlauf wird nicht gespeichert. Kopieren Sie Ihren Text vor dem Beenden."
+
+msgid "Cancel operation"
+msgstr "Vorgang abbrechen"
+
+msgid "Transcribe recording"
+msgstr "Aufnahme transkribieren"
+
+msgid "Transcribe recording (local CPU)"
+msgstr "Aufnahme transkribieren (lokale CPU)"
+
+msgid "Transcribe recording (OpenRouter cloud)"
+msgstr "Aufnahme transkribieren (OpenRouter-Cloud)"
+
+msgid "Copy transcript"
+msgstr "Transkript kopieren"
+
+msgid "Cancel transcription before closing."
+msgstr "Brechen Sie die Transkription vor dem Schließen ab."
+
+msgid "Cancel transcription before quitting."
+msgstr "Brechen Sie die Transkription vor dem Beenden ab."
+
+msgid "Another operation is active."
+msgstr "Ein anderer Vorgang ist noch aktiv."
+
+msgid "No completed recording is available."
+msgstr "Es ist keine abgeschlossene Aufnahme verfügbar."
+
+msgid "Provider changed. Review the displayed provider, then press Transcribe again."
+msgstr "Der Anbieter wurde geändert. Prüfen Sie den angezeigten Anbieter und klicken Sie erneut auf Transkribieren."
+
+msgid "Transcribing locally…"
+msgstr "Wird lokal transkribiert…"
+
+msgid "Transcribing with OpenRouter…"
+msgstr "Wird mit OpenRouter transkribiert…"
+
+msgid "Transcription could not start. Your recording is kept for retry."
+msgstr "Die Transkription konnte nicht starten. Ihre Aufnahme bleibt für einen erneuten Versuch erhalten."
+
+msgid "Transcription complete. Use Copy transcript to copy it."
+msgstr "Transkription abgeschlossen. Mit Transkript kopieren können Sie den Text kopieren."
+
+msgid "Transcription cancelled. Your recording is kept for retry."
+msgstr "Transkription abgebrochen. Ihre Aufnahme bleibt für einen erneuten Versuch erhalten."
+
+msgid "No transcript is available."
+msgstr "Es ist kein Transkript verfügbar."
+
+msgid "Transcript copied."
+msgstr "Transkript kopiert."
+
+msgid "Set OPENROUTER_API_KEY in env/.env or the process environment."
+msgstr "Setzen Sie OPENROUTER_API_KEY in env/.env oder in der Prozessumgebung."
+
+msgid "Set OPENROUTER_TRANSCRIPTION_MODEL; the generation model is not used for audio."
+msgstr "Setzen Sie OPENROUTER_TRANSCRIPTION_MODEL. Das Generierungsmodell wird nicht für Audio verwendet."
+
+msgid "The development configuration is invalid or unreadable. Check its KEY=value entries."
+msgstr "Die Entwicklungskonfiguration ist ungültig oder nicht lesbar. Prüfen Sie die Einträge im Format KEY=value."
+
+msgid "The recording is not a valid non-empty WAV file."
+msgstr "Die Aufnahme ist keine gültige WAV-Datei mit Audioinhalt."
+
+msgid "The recording exceeds the prototype's 20 MB audio limit."
+msgstr "Die Aufnahme überschreitet das Audiolimit von 20 MB dieses Prototyps."
+
+msgid "Use a recording of at most five minutes for this prototype."
+msgstr "Verwenden Sie für diesen Prototyp eine Aufnahme von höchstens fünf Minuten."
+
+msgid "OpenRouter rejected the API key. Check your local configuration."
+msgstr "OpenRouter hat den API-Schlüssel abgelehnt. Prüfen Sie Ihre lokale Konfiguration."
+
+msgid "OpenRouter requires available credit for this transcription."
+msgstr "OpenRouter benötigt verfügbares Guthaben für diese Transkription."
+
+msgid "OpenRouter is rate limiting requests. Try again later."
+msgstr "OpenRouter begrenzt derzeit die Anfragerate. Versuchen Sie es später erneut."
+
+msgid "OpenRouter rejected the audio or model, or the provider is unavailable."
+msgstr "OpenRouter hat die Audiodaten oder das Modell abgelehnt, oder der Anbieter ist nicht verfügbar."
+
+msgid "The transcription connection failed. Your recording is kept for retry."
+msgstr "Die Verbindung für die Transkription ist fehlgeschlagen. Ihre Aufnahme bleibt für einen erneuten Versuch erhalten."
+
+msgid "Transcription timed out. Your recording is kept for retry."
+msgstr "Zeitüberschreitung bei der Transkription. Ihre Aufnahme bleibt für einen erneuten Versuch erhalten."
+
+msgid "The transcription service returned an invalid or empty transcript."
+msgstr "Der Transkriptionsdienst hat ein ungültiges oder leeres Transkript zurückgegeben."
+
+msgid "The local transcription container is unavailable. Start it with the documented command."
+msgstr "Der lokale Transkriptionscontainer ist nicht erreichbar. Starten Sie diesen mit dem dokumentierten Befehl."
+
+msgid "The local model is busy. Try again shortly."
+msgstr "Das lokale Modell ist beschäftigt. Versuchen Sie es in Kürze erneut."
+
+msgid "The local transcription service rejected the request or could not transcribe it."
+msgstr "Der lokale Transkriptionsdienst hat die Anfrage abgelehnt oder konnte sie nicht transkribieren."
+
+msgid "Delete recording"
+msgstr "Aufnahme löschen"
+
+msgid "Stop or cancel the active operation before deleting the recording."
+msgstr "Stoppen Sie den aktiven Vorgang oder brechen Sie diesen vor dem Löschen der Aufnahme ab."
+
+msgid "Recording deleted."
+msgstr "Aufnahme gelöscht."

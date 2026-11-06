@@ -1,0 +1,105 @@
+Ubuntu local transcription validation — live tests 2026-11-05; headless recheck 2026-11-06
+
+Command: env -u DISPLAY -u WAYLAND_DISPLAY -u DBUS_SESSION_BUS_ADDRESS bash scripts/linux/test.sh
+Exit: 0
+Full output (verbatim):
+
+test_historical_jobs_refuse_before_host_commands (test_tooling_guards.ToolingGuardsTests.test_historical_jobs_refuse_before_host_commands) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 0.020s
+
+OK
+test_authorized_deferred_capture_is_consumed_once (test_demo_lifecycle.DemoLifecycleTests.test_authorized_deferred_capture_is_consumed_once) ... ok
+test_cancel_revokes_capture_waiting_for_discovery (test_demo_lifecycle.DemoLifecycleTests.test_cancel_revokes_capture_waiting_for_discovery) ... ok
+test_cancel_transcription_preserves_recording_and_rejects_late_result (test_demo_lifecycle.DemoLifecycleTests.test_cancel_transcription_preserves_recording_and_rejects_late_result) ... ok
+test_cancel_when_idle_preserves_completed_recording (test_demo_lifecycle.DemoLifecycleTests.test_cancel_when_idle_preserves_completed_recording) ... ok
+test_capture_error_deletes_incomplete_audio (test_demo_lifecycle.DemoLifecycleTests.test_capture_error_deletes_incomplete_audio) ... ok
+test_close_revokes_capture_waiting_for_discovery (test_demo_lifecycle.DemoLifecycleTests.test_close_revokes_capture_waiting_for_discovery) ... ok
+test_close_while_transcribing_is_refused (test_demo_lifecycle.DemoLifecycleTests.test_close_while_transcribing_is_refused) ... ok
+test_deferred_capture_is_not_consumed_during_another_operation (test_demo_lifecycle.DemoLifecycleTests.test_deferred_capture_is_not_consumed_during_another_operation) ... ok
+test_deleting_recording_requires_idle_state (test_demo_lifecycle.DemoLifecycleTests.test_deleting_recording_requires_idle_state) ... ok
+test_playback_error_preserves_valid_audio_for_retry (test_demo_lifecycle.DemoLifecycleTests.test_playback_error_preserves_valid_audio_for_retry) ... ok
+test_recording_or_playback_blocks_transcription_before_loading_credentials (test_demo_lifecycle.DemoLifecycleTests.test_recording_or_playback_blocks_transcription_before_loading_credentials) ... ok
+test_repeated_shortcut_revokes_request_before_discovery (test_demo_lifecycle.DemoLifecycleTests.test_repeated_shortcut_revokes_request_before_discovery) ... ok
+test_stale_result_cannot_overwrite_new_job (test_demo_lifecycle.DemoLifecycleTests.test_stale_result_cannot_overwrite_new_job) ... ok
+test_stop_revokes_capture_waiting_for_discovery (test_demo_lifecycle.DemoLifecycleTests.test_stop_revokes_capture_waiting_for_discovery) ... ok
+test_success_displays_text_but_only_explicit_copy_changes_clipboard (test_demo_lifecycle.DemoLifecycleTests.test_success_displays_text_but_only_explicit_copy_changes_clipboard) ... ok
+test_transcription_errors_preserve_recording_for_retry (test_demo_lifecycle.DemoLifecycleTests.test_transcription_errors_preserve_recording_for_retry) ... ok
+test_cloud_key_alone_does_not_enable_cloud (test_local_transcription.LocalConfigurationTests.test_cloud_key_alone_does_not_enable_cloud) ... ok
+test_local_is_default_without_api_key (test_local_transcription.LocalConfigurationTests.test_local_is_default_without_api_key) ... ok
+test_local_request_never_contains_cloud_credentials (test_local_transcription.LocalConfigurationTests.test_local_request_never_contains_cloud_credentials) ... ok
+test_local_url_must_be_plain_loopback_http (test_local_transcription.LocalConfigurationTests.test_local_url_must_be_plain_loopback_http) ... ok
+test_busy_model_does_not_queue_second_inference (test_local_transcription.LocalServiceTests.test_busy_model_does_not_queue_second_inference) ... ok
+test_health_and_valid_transcription (test_local_transcription.LocalServiceTests.test_health_and_valid_transcription) ... ok
+test_invalid_requests_are_fixed_errors (test_local_transcription.LocalServiceTests.test_invalid_requests_are_fixed_errors) ... ok
+test_model_loader_is_cpu_int8_and_offline (test_local_transcription.LocalServiceTests.test_model_loader_is_cpu_int8_and_offline) ... ok
+test_rejects_origin_and_non_json_requests (test_local_transcription.LocalServiceTests.test_rejects_origin_and_non_json_requests) ... ok
+test_cancel_after_connection_attaches_prevents_upload_and_closes (test_openrouter_transcription.OpenRouterTranscriptionTests.test_cancel_after_connection_attaches_prevents_upload_and_closes) ... ok
+test_cancel_before_request_prevents_upload (test_openrouter_transcription.OpenRouterTranscriptionTests.test_cancel_before_request_prevents_upload) ... ok
+test_cancelled_connection_cannot_automatically_reconnect_and_upload (test_openrouter_transcription.OpenRouterTranscriptionTests.test_cancelled_connection_cannot_automatically_reconnect_and_upload) ... ok
+test_http_errors_are_redacted_and_not_retried (test_openrouter_transcription.OpenRouterTranscriptionTests.test_http_errors_are_redacted_and_not_retried) ... ok
+test_missing_or_invalid_audio_never_opens_connection (test_openrouter_transcription.OpenRouterTranscriptionTests.test_missing_or_invalid_audio_never_opens_connection) ... ok
+test_network_errors_and_timeout_are_fixed_messages (test_openrouter_transcription.OpenRouterTranscriptionTests.test_network_errors_and_timeout_are_fixed_messages) ... ok
+test_rejects_audio_size_and_duration_before_request (test_openrouter_transcription.OpenRouterTranscriptionTests.test_rejects_audio_size_and_duration_before_request) ... ok
+test_rejects_invalid_empty_or_oversized_response (test_openrouter_transcription.OpenRouterTranscriptionTests.test_rejects_invalid_empty_or_oversized_response) ... ok
+test_sends_wav_to_fixed_https_endpoint_and_returns_text (test_openrouter_transcription.OpenRouterTranscriptionTests.test_sends_wav_to_fixed_https_endpoint_and_returns_text) ... ok
+test_cli_json_does_not_claim_functional_success (test_probe_report.ProbeReportTests.test_cli_json_does_not_claim_functional_success) ... ok
+test_installed_dependencies_do_not_prove_audio_or_shortcuts (test_probe_report.ProbeReportTests.test_installed_dependencies_do_not_prove_audio_or_shortcuts) ... ok
+test_missing_dependency_is_unavailable (test_probe_report.ProbeReportTests.test_missing_dependency_is_unavailable) ... ok
+test_missing_session_bus_is_blocked (test_probe_report.ProbeReportTests.test_missing_session_bus_is_blocked) ... ok
+test_report_contains_no_environment_values_or_device_identifiers (test_probe_report.ProbeReportTests.test_report_contains_no_environment_values_or_device_identifiers) ... ok
+test_report_schema (test_probe_report.ProbeReportTests.test_report_schema) ... ok
+test_timeout_is_handled_without_raw_exception (test_probe_report.ProbeReportTests.test_timeout_is_handled_without_raw_exception) ... ok
+test_generation_model_is_not_used_for_transcription (test_transcription_config.TranscriptionConfigTests.test_generation_model_is_not_used_for_transcription) ... ok
+test_invalid_config_does_not_echo_secret_or_execute_shell (test_transcription_config.TranscriptionConfigTests.test_invalid_config_does_not_echo_secret_or_execute_shell) ... ok
+test_missing_config_key_and_model_report_fixed_errors (test_transcription_config.TranscriptionConfigTests.test_missing_config_key_and_model_report_fixed_errors) ... ok
+test_process_environment_takes_precedence (test_transcription_config.TranscriptionConfigTests.test_process_environment_takes_precedence) ... ok
+test_reads_separate_transcription_model_and_hides_key (test_transcription_config.TranscriptionConfigTests.test_reads_separate_transcription_model_and_hides_key) ... ok
+test_rejects_header_injection_and_invalid_model (test_transcription_config.TranscriptionConfigTests.test_rejects_header_injection_and_invalid_model) ... ok
+test_rejects_oversized_env_without_echoing_content (test_transcription_config.TranscriptionConfigTests.test_rejects_oversized_env_without_echoing_content) ... ok
+test_supports_quotes_export_and_comments (test_transcription_config.TranscriptionConfigTests.test_supports_quotes_export_and_comments) ... ok
+test_cancel_before_start_never_invokes_transcriber (test_transcription_job.TranscriptionJobTests.test_cancel_before_start_never_invokes_transcriber) ... ok
+test_cancel_closes_connection_and_discards_late_result (test_transcription_job.TranscriptionJobTests.test_cancel_closes_connection_and_discards_late_result) ... ok
+test_cancel_does_not_wait_for_real_http_reader_lock (test_transcription_job.TranscriptionJobTests.test_cancel_does_not_wait_for_real_http_reader_lock) ... ok
+test_deadline_dispatches_before_blocking_http_cleanup (test_transcription_job.TranscriptionJobTests.test_deadline_dispatches_before_blocking_http_cleanup) ... ok
+test_deadline_publishes_timeout_once_and_ignores_late_completion (test_transcription_job.TranscriptionJobTests.test_deadline_publishes_timeout_once_and_ignores_late_completion) ... ok
+test_errors_only_publish_fixed_code (test_transcription_job.TranscriptionJobTests.test_errors_only_publish_fixed_code) ... ok
+test_success_is_dispatched_once_with_job_identity (test_transcription_job.TranscriptionJobTests.test_success_is_dispatched_once_with_job_identity) ... ok
+
+----------------------------------------------------------------------
+Ran 56 tests in 0.813s
+
+OK
+
+Actual local model/client test, public faster-whisper JFK fixture (verbatim):
+Local CPU transcription succeeded.
+Expected public fixture word found: True
+Transcript characters: 105
+Elapsed seconds: 2.54
+
+Actual GTK background job -> transcript display (verbatim):
+GTK live local transcription displayed the real result.
+Main-loop heartbeats during inference: 44
+No microphone capture or cloud request was made.
+GTK window rendered; main-loop timer fired; no recording started.
+
+English and filled German windows visually inspected.
+Docker build/start: exit 0; model health reachable from host 127.0.0.1:8765.
+Runtime: CPU4, memory4GiB, non-root10001, readonly rootfs, temporary /tmp.
+Pinned faster-whisper1.2.1, PyAV16.0.1, fixed base model revision.
+Docker build WAV decoder check passed. Python/shell/Compose/whitespace checks exit0.
+Real-key exclusion and ignored env/.env verified without printing/copying key.
+A host GStreamer video-plugin scanner warning appeared on one smoke launch;
+window rendering and local speech validation still passed.
+
+Independent reviewer: gpt-6-astra; one Important HTTP cleanup block reproduced
+with actual socket pairs, fixed RED->GREEN, full suite green. No deferred minors.
+OpenRouter live API, actual user speech accuracy, long meeting recovery and
+new Mac runtime behavior are not claimed verified.
+
+Original macOS rebuild attempt on Ubuntu — exit 127 (verbatim):
+🔏 Signing: ad-hoc (no Apple Development identity; legacy keychain, prompts on rebuilds)
+📚 Syncing bundled docs...
+🔨 Building WhisperShortcut (configuration: Debug)...
+scripts/rebuild-and-restart.sh: line 174: xcodebuild: command not found
