@@ -1,5 +1,6 @@
 """One cancellable background request; terminal outcomes are published once."""
 import threading
+import socket
 from transcription_client import REQUEST_TIMEOUT, TranscriptionError, transcribe
 
 
@@ -20,11 +21,27 @@ class TranscriptionJob:
 
     @staticmethod
     def _close(connection):
-        if connection:
+        if not connection:
+            return
+        def cleanup():
+            # HTTPResponse.close may wait for a buffered-reader lock. Neither
+            # GTK Cancel nor the deadline publisher may wait on that lock.
+            transport = getattr(connection, "sock", None)
+            if transport:
+                try:
+                    transport.shutdown(socket.SHUT_RDWR)
+                except OSError:
+                    pass
             try:
                 connection.close()
             except Exception:
                 pass
+        try:
+            threading.Thread(target=cleanup, daemon=True).start()
+        except RuntimeError:
+            # Resource exhaustion must not turn Cancel into a synchronous close.
+            # The request worker still owns final cleanup and has a socket timeout.
+            pass
 
     def start(self):
         with self._lock:
@@ -69,9 +86,11 @@ class TranscriptionJob:
             connection, timer = self._connection, self._timer
         if timer:
             timer.cancel()
-        if stop:
-            self._close(connection)
-        self.dispatch(lambda: self.done(self, text, error))
+        try:
+            self.dispatch(lambda: self.done(self, text, error))
+        finally:
+            if stop:
+                self._close(connection)
 
     def _expire(self):
         self._finish(None, "timeout", stop=True)
