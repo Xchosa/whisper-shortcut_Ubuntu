@@ -97,3 +97,9 @@ Independent reviewer: gpt-6-astra; one Important HTTP cleanup block reproduced
 with actual socket pairs, fixed RED->GREEN, full suite green. No deferred minors.
 OpenRouter live API, actual user speech accuracy, long meeting recovery and
 new Mac runtime behavior are not claimed verified.
+
+Original macOS rebuild attempt on Ubuntu — exit 127 (verbatim):
+🔏 Signing: ad-hoc (no Apple Development identity; legacy keychain, prompts on rebuilds)
+📚 Syncing bundled docs...
+🔨 Building WhisperShortcut (configuration: Debug)...
+scripts/rebuild-and-restart.sh: line 174: xcodebuild: command not found

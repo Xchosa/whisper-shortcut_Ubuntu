@@ -2,6 +2,8 @@
 
 > **For agentic workers:** Use superpowers:executing-plans for native implementation and a fresh whole-branch review. Track checkbox steps and preserve the execution ledger.
 
+**Status:** Implemented and verified locally; delivered on `feat/ubuntu-transcription` for PR review. No merge or release.
+
 **Goal:** Let the user-validated Ubuntu recorder transcribe locally through a separate CPU container and display/copy the result; retain the completed OpenRouter adapter as an explicit alternative.
 
 **Architecture:** Extend the desktop prototype with small standard-library modules for development configuration, HTTPS transcription and a cancellable background job. GTK owns display state and rejects stale job results. This is the next bounded slice of the approved cloud-first dictation design, not production meetings or a full application rewrite.
@@ -85,7 +87,7 @@ Files: update prototype README, platform commands, desktop evidence and design i
 - [x] Build/start the separate container and validate a short public/synthetic speech fixture locally. Verify UI text display/copy with that fixture. Do not make a cloud request or upload existing personal recordings automatically.
 - [x] Record actual provider outcomes, not inferred success. Verify no secret/audio/transcript artifacts are staged.
 - [x] Independent whole-branch review; fix Important/Critical findings with regression tests; run full checks.
-- [ ] Commit explicit files, push feature branch, create draft PR, report actual checks and remaining prototype limitations. Never merge or release.
+- [x] Commit explicit files, push feature branch, create draft PR, report actual checks and remaining prototype limitations. Never merge or release.
 
 ## References verified
 
