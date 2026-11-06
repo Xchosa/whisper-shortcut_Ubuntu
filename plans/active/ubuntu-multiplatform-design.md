@@ -232,3 +232,12 @@ blocker should trigger another product decision.
 - libsecret: https://gnome.pages.gitlab.gnome.org/libsecret/
 
 These document APIs, not proof that this desktop implements every interface.
+
+## Explicit user update — 2026-11-05
+
+The user requested a separate small local speech-model container before cloud
+transcription. The next implemented slice therefore defaults to local CPU/base
+with optional, explicitly selected OpenRouter. This changes development ordering,
+not the agreed four-feature scope or the separate native-platform structure.
+The recording prototype now displays/copies transcripts. Production history,
+recovery, long-meeting segmentation, chat and read-aloud remain later work.

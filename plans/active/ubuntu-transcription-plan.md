@@ -41,9 +41,9 @@ Files: create apps/linux/prototype/transcription_config.py and tests/test_transc
 
 Produces load_config(env_file: Path | None = None) -> TranscriptionConfig, with api_key excluded from repr, explicit model and fixed ConfigError messages.
 
-- [ ] Test simple/quoted/export assignments, process-env precedence, missing file/key/model, invalid syntax, no shell interpolation/execution and secret-free repr/errors. Watch failure before implementation.
-- [ ] Implement a bounded simple KEY=value parser; only process-environment or explicit/local development env input. Reject control characters in keys/model and invalid model slugs.
-- [ ] Run the full Linux suite and commit configuration independently.
+- [x] Test simple/quoted/export assignments, process-env precedence, missing file/key/model, invalid syntax, no shell interpolation/execution and secret-free repr/errors. Watch failure before implementation.
+- [x] Implement a bounded simple KEY=value parser; only process-environment or explicit/local development env input. Reject control characters in keys/model and invalid model slugs.
+- [x] Run the full Linux suite and commit configuration independently.
 
 ## Task 2: HTTPS adapter and background lifecycle
 
@@ -51,40 +51,40 @@ Files: create openrouter_transcription.py, transcription_job.py and their tests 
 
 Produces transcribe(path, config, cancelled, attach_connection) -> str; TranscriptionError.code/message; TranscriptionJob.start()/cancel() with dispatch(callback) and done(job,text,error).
 
-- [ ] Test real WAV validation, base64 JSON and Bearer request shape against an injected fake connection; no live requests in unit tests.
-- [ ] Test 401/402/403/429/5xx, redirects, invalid/empty JSON/text, response/audio size caps, five-minute duration cap, socket timeout, cancellation before request and connection cleanup. Errors must exclude provider body/key.
-- [ ] Test success, cancellation, queued-result suppression, deadline and background completion using deterministic events. Use a 65-second overall UI deadline and bounded socket operations.
-- [ ] Implement only the official fixed HTTPS endpoint https://openrouter.ai/api/v1/audio/transcriptions, with no redirects or automatic retries.
-- [ ] Run all Linux tests and commit.
+- [x] Test real WAV validation, base64 JSON and Bearer request shape against an injected fake connection; no live requests in unit tests.
+- [x] Test 401/402/403/429/5xx, redirects, invalid/empty JSON/text, response/audio size caps, five-minute duration cap, socket timeout, cancellation before request and connection cleanup. Errors must exclude provider body/key.
+- [x] Test success, cancellation, queued-result suppression, deadline and background completion using deterministic events. Use a 65-second overall UI deadline and bounded socket operations.
+- [x] Implement only the official fixed HTTPS endpoint https://openrouter.ai/api/v1/audio/transcriptions, with no redirects or automatic retries.
+- [x] Run all Linux tests and commit.
 
 ## Task 3: Local CPU service and provider selection
 
 Files: compose.local.yaml; apps/linux/services/transcription/{Dockerfile,requirements.txt,server.py,.dockerignore}; scripts/linux/start-local-transcription.sh; adapt transcription_config.py, transcription client/job imports and their tests.
 
-- [ ] Test default local mode without credentials, explicit cloud selection, loopback-only URL validation and local request shape before implementation.
-- [ ] Test the service with a fake model: request validation, health, model matching, WAV caps, serialized inference, origin/content-type checks and fixed errors. Tests must not download a model.
-- [ ] Build a JSON audio/text service using stdlib HTTP plus pinned faster-whisper. Bind only host loopback, run as a non-root user, enforce runtime offline model loading and keep audio in memory.
-- [ ] Reuse bounded WAV/JSON client logic for both providers, with no cloud Authorization header in local mode and no redirects/retries.
-- [ ] Run all Linux tests; commit container and local backend separately.
+- [x] Test default local mode without credentials, explicit cloud selection, loopback-only URL validation and local request shape before implementation.
+- [x] Test the service with a fake model: request validation, health, model matching, WAV caps, serialized inference, origin/content-type checks and fixed errors. Tests must not download a model.
+- [x] Build a JSON audio/text service using stdlib HTTP plus pinned faster-whisper. Bind only host loopback, run as a non-root user, enforce runtime offline model loading and keep audio in memory.
+- [x] Reuse bounded WAV/JSON client logic for both providers, with no cloud Authorization header in local mode and no redirects/retries.
+- [x] Run all Linux tests; commit container and local backend separately.
 
 ## Task 4: GTK transcription workflow
 
 Files: modify desktop_demo.py, tests/test_demo_lifecycle.py, po/de.po and scripts/linux/run-prototype.sh.
 
-- [ ] Add headless regression tests for active-operation rejection, cancel preserving audio, stale result rejection and explicit copy only. Keep existing deferred-recording tests.
-- [ ] Add a read-only transcript area, provider-specific Transcribe recording and Copy transcript controls. Make content scrollable and disclose local container vs explicit cloud mode.
-- [ ] Integrate background jobs with GTK dispatch, identity-checked callbacks and a single active operation. Clear old text only when starting a new recording; preserve the recording on errors/cancel.
-- [ ] Resolve the development env in the main checkout via Git common dir in the run wrapper; explicit WHISPER_SHORTCUT_ENV_FILE/process env overrides remain possible. Never source the file.
-- [ ] Run full headless tests, shell/Python checks, English/German rendering, then commit.
+- [x] Add headless regression tests for active-operation rejection, cancel preserving audio, stale result rejection and explicit copy only. Keep existing deferred-recording tests.
+- [x] Add a read-only transcript area, provider-specific Transcribe recording and Copy transcript controls. Make content scrollable and disclose local container vs explicit cloud mode.
+- [x] Integrate background jobs with GTK dispatch, identity-checked callbacks and a single active operation. Clear old text only when starting a new recording; preserve the recording on errors/cancel.
+- [x] Resolve the development env in the main checkout via Git common dir in the run wrapper; explicit WHISPER_SHORTCUT_ENV_FILE/process env overrides remain possible. Never source the file.
+- [x] Run full headless tests, shell/Python checks, English/German rendering, then commit.
 
 ## Task 5: Live validation, documentation and delivery
 
 Files: update prototype README, platform commands, desktop evidence and design implementation status; add a validation report with verbatim output.
 
-- [ ] Start/restart only after confirming no recording is interrupted. User already confirmed the old window closed.
-- [ ] Build/start the separate container and validate a short public/synthetic speech fixture locally. Verify UI text display/copy with that fixture. Do not make a cloud request or upload existing personal recordings automatically.
-- [ ] Record actual provider outcomes, not inferred success. Verify no secret/audio/transcript artifacts are staged.
-- [ ] Independent whole-branch review; fix Important/Critical findings with regression tests; run full checks.
+- [x] Start/restart only after confirming no recording is interrupted. User already confirmed the old window closed.
+- [x] Build/start the separate container and validate a short public/synthetic speech fixture locally. Verify UI text display/copy with that fixture. Do not make a cloud request or upload existing personal recordings automatically.
+- [x] Record actual provider outcomes, not inferred success. Verify no secret/audio/transcript artifacts are staged.
+- [x] Independent whole-branch review; fix Important/Critical findings with regression tests; run full checks.
 - [ ] Commit explicit files, push feature branch, create draft PR, report actual checks and remaining prototype limitations. Never merge or release.
 
 ## References verified
