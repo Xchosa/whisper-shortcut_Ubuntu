@@ -4,7 +4,6 @@ import locale
 import os
 from pathlib import Path
 import sys
-import tempfile
 import threading
 import time
 import uuid
@@ -20,6 +19,8 @@ from gi.repository import Gdk, Gio, GLib, Gsk, Gst, Gtk, Secret
 from transcription_config import ConfigError, load_config
 from transcription_client import TranscriptionError
 from transcription_job import TranscriptionJob
+from history_store import HistoryStore, HistoryError, export_text
+from history_panel import HistoryPanel
 
 Gst.init(None)
 APP_ID = "io.github.Xchosa.WhisperShortcut.Prototype"
@@ -65,7 +66,10 @@ class Demo(Gtk.Application):
         self.started_at = None
         self.devices = []
         self.background_held = False
-        self.scratch = tempfile.TemporaryDirectory(prefix="whisper-prototype-")
+        self.history = None
+        self.entry_id = None
+        self.unsaved = None
+        self.history_offset = 0
         self.smoke = False
         self.exit_code = 0
         self.keyring_cancel = None
@@ -112,11 +116,13 @@ class Demo(Gtk.Application):
         box.append(self.status)
         box.append(Gtk.Label(label=_("Transcript"), xalign=0))
         transcript = Gtk.TextView(editable=False, wrap_mode=Gtk.WrapMode.WORD_CHAR)
-        transcript.set_tooltip_text(_("Transcript history is not saved. Copy your text before quitting."))
+        transcript.set_tooltip_text(_("Transcripts are saved locally. Failed recordings remain available for retry."))
         self.transcript_buffer = transcript.get_buffer()
         transcript_scroll = Gtk.ScrolledWindow(min_content_height=140)
         transcript_scroll.set_child(transcript)
         box.append(transcript_scroll)
+        self.history_panel = HistoryPanel(_, self.open_history, self.confirm_delete_history, self.page_history)
+        box.append(self.history_panel.widget)
         self.microphone = Gtk.DropDown.new_from_strings([_("Finding audio sources…")])
         self.microphone.set_tooltip_text(_("Microphone source"))
         box.append(self.microphone)
@@ -133,6 +139,8 @@ class Demo(Gtk.Application):
             ("Play last recording", lambda *_: self.play()),
             ("Delete recording", lambda *_: self.delete_recording()),
             ("Transcribe recording", lambda *_: self.transcribe_recording()),
+            ("Retry saving transcript", lambda *_: self.retry_save()),
+            ("Export transcript", lambda *_: self.export_transcript()),
             ("Copy transcript", lambda *_: self.copy_transcript()),
             ("Copy harmless test text", lambda *_: self.window.get_clipboard().set("WhisperShortcut clipboard test")),
             ("Shortcut setup", lambda *_: self.shortcut_help()),
@@ -151,6 +159,14 @@ class Demo(Gtk.Application):
         try:
             self.show_provider(load_config())
         except ConfigError as error:
+            self.say(str(error))
+        try:
+            self.history = HistoryStore()
+            self.refresh_history()
+            entries = self.history.list_entries(limit=1)
+            if entries:
+                self.open_history(entries[0].id)
+        except HistoryError as error:
             self.say(str(error))
         self.window.present()
         GLib.timeout_add(250, self.tick)
@@ -196,6 +212,11 @@ class Demo(Gtk.Application):
 
     def close_window(self, *_):
         self.pending_toggle = False
+        if not self.can_leave_text():
+            return True
+        if self.state == "exporting":
+            self.say("Another operation is active.")
+            return True
         if self.state == "transcribing":
             self.say("Cancel transcription before closing.")
             return True
@@ -215,15 +236,25 @@ class Demo(Gtk.Application):
             return
         if self.state == "playing":
             self.cancel(delete_audio=False)
+        if not self.can_leave_text():
+            return
+        if not self.history:
+            self.say(str(HistoryError()))
+            return
         index = self.microphone.get_selected()
         if mode != "system" and index >= len(self.devices):
             self.say("No microphone sources found")
             return
+        try:
+            entry = self.history.create_recording()
+        except HistoryError as error:
+            self.say(str(error))
+            return
+        self.entry_id = entry.id
+        self.audio_path = self.history.audio_path(entry.id)
         self.transcript_text = ""
         self.transcript_buffer.set_text("")
-        self.delete_audio()
-        self.audio_path = Path(self.scratch.name) / (uuid.uuid4().hex + ".wav")
-        self.audio_path.touch(mode=0o600)
+        self.refresh_history()
         try:
             pipeline = Gst.parse_launch(
                 "audiomixer name=mix ! audioconvert ! audioresample ! "
@@ -261,7 +292,9 @@ class Demo(Gtk.Application):
                 raise RuntimeError("Audio start failed")
             self.say("Recording — use Stop to finalize or Cancel to delete.")
         except Exception:
-            self.cancel(delete_audio=True)
+            self.release_pipeline()
+            self.state = "idle"
+            self.persist_status("mark_failed", "capture")
             self.say("Audio capture failed. Check source, permissions and device availability.")
 
     def watch_pipeline(self):
@@ -272,13 +305,19 @@ class Demo(Gtk.Application):
     def message(self, bus, message):
         if message.type == Gst.MessageType.ERROR:
             # Playback uses an already-valid recording; an output failure must
-            # preserve it for retry. Failed captures are incomplete disposable output.
-            self.cancel(delete_audio=self.state != "playing")
+            # preserve it for retry. Failed captures are retained but may be incomplete.
+            self.release_pipeline()
+            was_capture = self.state in {"recording", "stopping"}
+            self.state = "idle"
+            if was_capture:
+                self.persist_status("mark_failed", "capture")
             self.say("Audio operation failed. Check device availability.")
         elif message.type == Gst.MessageType.EOS:
             was_capture = self.state == "stopping"
             self.release_pipeline()
             self.state = "idle"
+            if was_capture and not self.persist_status("mark_ready"):
+                return
             self.say("Recording saved locally. Listen back to verify both content and sources."
                      if was_capture else "Playback finished.")
             if self.pending_quit:
@@ -305,9 +344,11 @@ class Demo(Gtk.Application):
 
     def stop_failed(self):
         self.stop_timeout = None
-        self.cancel()
+        self.release_pipeline()
+        self.state = "idle"
+        self.persist_status("mark_failed", "capture")
         self.pending_quit = False
-        self.say("Audio finalization timed out; incomplete test audio was deleted.")
+        self.say("Audio finalization timed out; recording retained for inspection.")
         return False
 
     def release_pipeline(self):
@@ -323,12 +364,29 @@ class Demo(Gtk.Application):
         self.pipeline = self.bus = self.bus_handler = None
 
     def delete_audio(self):
-        if self.audio_path:
-            self.audio_path.unlink(missing_ok=True)
+        if self.entry_id:
+            try:
+                self.history.discard_recording(self.entry_id)
+            except HistoryError as error:
+                # Capture has stopped even if deletion failed; keep it retryable.
+                try:
+                    self.history.mark_failed(self.entry_id, "storage")
+                except HistoryError:
+                    pass
+                self.say(str(error))
+                return False
+            self.entry_id = None
             self.audio_path = None
+            self.transcript_text = ""
+            self.transcript_buffer.set_text("")
+            self.refresh_history()
+        return True
 
     def cancel(self, delete_audio=None):
         self.pending_toggle = False
+        if self.state == "exporting":
+            self.say("Another operation is active.")
+            return
         if self.state == "transcribing":
             self.cancel_transcription()
             return
@@ -336,16 +394,16 @@ class Demo(Gtk.Application):
             delete_audio = self.state in {"recording", "stopping"}
         self.release_pipeline()
         self.state = "idle"
-        if delete_audio:
-            self.delete_audio()
+        if delete_audio and not self.delete_audio():
+            return
         self.say("Idle")
 
     def delete_recording(self):
         if self.state != "idle":
             self.say("Stop or cancel the active operation before deleting the recording.")
             return
-        self.delete_audio()
-        self.say("Recording deleted.")
+        if self.entry_id:
+            self.confirm_delete_history(self.entry_id)
 
     def show_provider(self, config):
         self.visible_provider = config.provider
@@ -356,6 +414,8 @@ class Demo(Gtk.Application):
     def transcribe_recording(self):
         if self.state != "idle":
             self.say("Another operation is active.")
+            return
+        if not self.can_leave_text():
             return
         if not self.audio_path or not self.audio_path.exists():
             self.say("No completed recording is available.")
@@ -368,6 +428,8 @@ class Demo(Gtk.Application):
         if config.provider != self.visible_provider:
             self.show_provider(config)
             self.say("Provider changed. Review the displayed provider, then press Transcribe again.")
+            return
+        if not self.persist_status("mark_transcribing"):
             return
         job = TranscriptionJob(self.audio_path, config,
                                lambda callback: GLib.idle_add(callback),
@@ -387,14 +449,17 @@ class Demo(Gtk.Application):
         self.transcription_task = None
         self.state = "idle"
         if error:
+            self.persist_status("mark_failed", error)
             self.say(TranscriptionError(error).message)
             return
         if not isinstance(text, str) or not text.strip():
+            self.persist_status("mark_failed", "response")
             self.say(TranscriptionError("response").message)
             return
         self.transcript_text = text
         self.transcript_buffer.set_text(text)
-        self.say("Transcription complete. Use Copy transcript to copy it.")
+        self.unsaved = (self.entry_id, text, job.config.provider, job.config.model)
+        self.retry_save()
 
     def cancel_transcription(self):
         job = self.transcription_task
@@ -402,6 +467,7 @@ class Demo(Gtk.Application):
         if job:
             job.cancel()
         self.state = "idle"
+        self.persist_status("mark_cancelled")
         self.say("Transcription cancelled. Your recording is kept for retry.")
 
     def copy_transcript(self):
@@ -410,6 +476,141 @@ class Demo(Gtk.Application):
             return
         self.window.get_clipboard().set(self.transcript_text)
         self.say("Transcript copied.")
+
+    def can_leave_text(self):
+        if self.unsaved:
+            self.say("Transcript could not be saved. Retry saving or export it before continuing.")
+            return False
+        return True
+
+    def persist_status(self, method, *args):
+        try:
+            if not self.history or not self.entry_id:
+                raise HistoryError("storage")
+            getattr(self.history, method)(self.entry_id, *args)
+            self.refresh_history()
+            return True
+        except HistoryError as error:
+            self.say(str(error))
+            return False
+
+    def retry_save(self):
+        if self.state != "idle" or not self.unsaved:
+            return
+        try:
+            removed = self.history.save_transcript(*self.unsaved)
+            self.unsaved = None
+            if removed:
+                self.audio_path = None
+            self.refresh_history()
+            self.say("Transcript saved locally. Use Copy or Export to share it.")
+        except HistoryError as error:
+            self.say(str(error))
+
+    def refresh_history(self):
+        if not self.history:
+            return
+        try:
+            entries = self.history.list_entries(limit=100, offset=self.history_offset)
+            self.history_panel.update(entries, self.history_offset, self.entry_id)
+        except HistoryError as error:
+            self.say(str(error))
+
+    def page_history(self, direction):
+        self.history_offset = max(0, self.history_offset + direction * 100)
+        self.refresh_history()
+
+    def open_history(self, entry_id):
+        if self.state != "idle" or not self.can_leave_text():
+            return
+        try:
+            entry = self.history.get(entry_id)
+            if not entry:
+                raise HistoryError("entry")
+            self.entry_id = entry.id
+            path = self.history.audio_path(entry.id)
+            self.audio_path = path if path.exists() else None
+            self.transcript_text = entry.text
+            self.transcript_buffer.set_text(entry.text)
+            self.say("Saved transcript opened." if entry.text else
+                     "Recording opened. Use Play or Transcribe to retry.")
+        except HistoryError as error:
+            self.say(str(error))
+
+    def confirm_delete_history(self, entry_id):
+        if self.state != "idle" or not self.can_leave_text():
+            return
+        dialog = Gtk.AlertDialog(message=_("Delete this history entry and its recording?"),
+                                 buttons=[_("Keep"), _("Delete")], default_button=0, cancel_button=0)
+
+        def answered(source, result):
+            try:
+                choice = source.choose_finish(result)
+            except GLib.Error:
+                return
+            if choice != 1 or self.state != "idle" or not self.can_leave_text():
+                return
+            try:
+                self.history.delete(entry_id)
+                if self.entry_id == entry_id:
+                    self.entry_id = None
+                    self.audio_path = None
+                    self.transcript_text = ""
+                    self.transcript_buffer.set_text("")
+                self.refresh_history()
+                self.say("History entry deleted.")
+            except HistoryError as error:
+                self.say(str(error))
+        dialog.choose(self.window, None, answered)
+
+    def export_transcript(self):
+        if self.state != "idle" or not self.transcript_text:
+            self.say("No idle transcript is available for export.")
+            return
+        text = self.transcript_text  # Immutable snapshot, independent of dropdown changes.
+        pending = self.unsaved
+        self.state = "exporting"
+        dialog = Gtk.FileDialog(title=_("Export transcript"), initial_name="transcript.txt")
+
+        def selected(source, result):
+            try:
+                file = source.save_finish(result)
+                path = file.get_path()
+                if path is None or Path(path).resolve().is_relative_to(self.history.root.resolve()):
+                    raise HistoryError("export")
+            except GLib.Error:
+                self.state = "idle"
+                return
+            except (HistoryError, OSError, RuntimeError):
+                self.state = "idle"
+                self.say(str(HistoryError("export")))
+                return
+
+            def write():
+                error = None
+                try:
+                    export_text(text, Path(path))
+                except HistoryError as failure:
+                    error = str(failure)
+                GLib.idle_add(finished, error)
+            try:
+                threading.Thread(target=write, daemon=True).start()
+            except RuntimeError:
+                self.state = "idle"
+                self.say(str(HistoryError("export")))
+
+        def finished(error):
+            self.state = "idle"
+            if error:
+                self.say(error)
+            else:
+                if self.unsaved is pending:
+                    self.unsaved = None  # Export is a durable alternative when DB is unavailable.
+                    if pending:
+                        self.persist_status("mark_cancelled")
+                self.say("Transcript exported.")
+            return False
+        dialog.save(self.window, None, selected)
 
     def play(self):
         if self.state != "idle":
@@ -488,6 +689,11 @@ class Demo(Gtk.Application):
 
     def request_quit(self):
         self.pending_toggle = False
+        if not self.can_leave_text():
+            return
+        if self.state == "exporting":
+            self.say("Another operation is active.")
+            return
         if self.state == "transcribing":
             self.say("Cancel transcription before quitting.")
             return
@@ -522,7 +728,6 @@ class Demo(Gtk.Application):
         if self.transcription_task:
             self.cancel_transcription()
         self.release_pipeline()
-        self.scratch.cleanup()
         Gtk.Application.do_shutdown(self)
 
 

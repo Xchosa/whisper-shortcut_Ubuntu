@@ -5,9 +5,11 @@ import tempfile
 import sys
 from types import SimpleNamespace
 import unittest
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from transcription_client import TranscriptionError
+from history_store import HistoryStore, HistoryError
 
 
 def demo_type():
@@ -15,7 +17,9 @@ def demo_type():
     original = next(node for node in tree.body if isinstance(node, ast.ClassDef) and node.name == "Demo")
     names = {"cancel", "delete_audio", "stop", "set_sources", "message",
              "do_command_line", "close_window", "transcribe_recording",
-             "finish_transcription", "cancel_transcription", "copy_transcript", "delete_recording"}
+             "finish_transcription", "cancel_transcription", "copy_transcript", "delete_recording",
+             "can_leave_text", "persist_status", "retry_save", "open_history",
+             "export_transcript", "confirm_delete_history", "start_capture"}
     # Execute these exact methods, isolating only GTK's inheritance/import boundary.
     original.bases = []
     original.body = [node for node in original.body if isinstance(node, ast.FunctionDef) and node.name in names]
@@ -25,14 +29,23 @@ def demo_type():
         "Gtk": SimpleNamespace(StringList=SimpleNamespace(new=lambda names: names)),
         "Gst": SimpleNamespace(MessageType=SimpleNamespace(ERROR="error", EOS="eos")),
         "TranscriptionError": TranscriptionError,
+        "HistoryError": HistoryError,
     }
     exec(compile(module, "<real desktop demo methods>", "exec"), namespace)
+    namespace["Demo"]._namespace = namespace
     return namespace["Demo"]
 
 
 class DemoLifecycleTests(unittest.TestCase):
     def setUp(self):
         self.demo = demo_type()()
+        self.directory = tempfile.TemporaryDirectory()
+        self.addCleanup(self.directory.cleanup)
+        self.demo.history = HistoryStore(Path(self.directory.name) / "data")
+        self.demo.entry_id = None
+        self.demo.unsaved = None
+        self.demo.refresh_history = lambda: None
+        self.demo.confirm_delete_history = lambda entry_id: self.demo.history.delete(entry_id)
         self.demo.state = "idle"
         self.demo.pending_toggle = True
         self.demo.audio_path = None
@@ -96,16 +109,13 @@ class DemoLifecycleTests(unittest.TestCase):
             self.assertTrue(path.exists())
             self.assertEqual(self.demo.state, "idle")
 
-    def test_capture_error_deletes_incomplete_audio(self):
-        with tempfile.TemporaryDirectory() as directory:
-            path = Path(directory) / "incomplete.wav"
-            path.write_bytes(b"incomplete")
-            self.demo.audio_path = path
-            self.demo.state = "recording"
-            self.demo.message(None, SimpleNamespace(type="error"))
-            self.assertFalse(path.exists())
-            self.assertIsNone(self.demo.audio_path)
-            self.assertEqual(self.demo.state, "idle")
+    def test_capture_error_retains_managed_incomplete_audio(self):
+        entry = self.recording()
+        self.demo.state = "recording"
+        self.demo.message(None, SimpleNamespace(type="error"))
+        self.assertTrue(self.demo.audio_path.exists())
+        self.assertEqual(self.demo.history.get(entry.id).status, "failed")
+        self.assertEqual(self.demo.state, "idle")
 
     def test_cancel_transcription_preserves_recording_and_rejects_late_result(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -134,7 +144,8 @@ class DemoLifecycleTests(unittest.TestCase):
         self.assertEqual(self.displayed, [])
 
     def test_success_displays_text_but_only_explicit_copy_changes_clipboard(self):
-        job = object()
+        self.recording()
+        job = SimpleNamespace(config=SimpleNamespace(provider="local", model="base"))
         self.demo.transcription_task = job
         self.demo.state = "transcribing"
         self.demo.finish_transcription(job, "Recognized words.", None)
@@ -177,13 +188,183 @@ class DemoLifecycleTests(unittest.TestCase):
             self.assertTrue(path.exists())
 
     def test_deleting_recording_requires_idle_state(self):
-        with tempfile.TemporaryDirectory() as directory:
-            path = Path(directory) / "valid.wav"
-            path.write_bytes(b"synthetic")
-            self.demo.audio_path = path
-            self.demo.state = "transcribing"
-            self.demo.delete_recording()
-            self.assertTrue(path.exists())
-            self.demo.state = "idle"
-            self.demo.delete_recording()
-            self.assertFalse(path.exists())
+        entry = self.recording()
+        path = self.demo.audio_path
+        self.demo.state = "transcribing"
+        self.demo.delete_recording()
+        self.assertTrue(path.exists())
+        self.demo.state = "idle"
+        self.demo.delete_recording()
+        self.assertFalse(path.exists())
+        self.assertIsNone(self.demo.history.get(entry.id))
+
+    def recording(self):
+        entry = self.demo.history.create_recording()
+        self.demo.history.mark_ready(entry.id)
+        self.demo.entry_id = entry.id
+        self.demo.audio_path = self.demo.history.audio_path(entry.id)
+        self.demo.audio_path.write_bytes(b"synthetic")
+        return entry
+
+    def test_success_is_saved_before_audio_is_removed(self):
+        entry = self.recording()
+        path = self.demo.audio_path
+        job = SimpleNamespace(config=SimpleNamespace(provider="local", model="base"))
+        self.demo.transcription_task = job
+        self.demo.state = "transcribing"
+        self.demo.finish_transcription(job, "Durable test text", None)
+        self.assertEqual(self.demo.history.get(entry.id).text, "Durable test text")
+        self.assertFalse(path.exists())
+        self.assertIsNone(self.demo.unsaved)
+
+    def test_storage_failure_preserves_result_and_blocks_switch_until_retry(self):
+        entry = self.recording()
+        job = SimpleNamespace(config=SimpleNamespace(provider="local", model="base"))
+        self.demo.transcription_task = job
+        self.demo.state = "transcribing"
+        with patch.object(self.demo.history, "save_transcript", side_effect=HistoryError()):
+            self.demo.finish_transcription(job, "Unsaved synthetic text", None)
+        self.assertEqual(self.demo.transcript_text, "Unsaved synthetic text")
+        self.assertTrue(self.demo.audio_path.exists())
+        self.assertFalse(self.demo.can_leave_text())
+        second = self.demo.history.create_recording()
+        self.demo.open_history(second.id)
+        self.assertEqual(self.demo.entry_id, entry.id)
+        self.demo.retry_save()
+        self.assertTrue(self.demo.can_leave_text())
+        self.assertEqual(self.demo.history.get(entry.id).text, "Unsaved synthetic text")
+
+    def test_open_retained_audio_and_saved_text_after_restart(self):
+        failed = self.recording()
+        failed_path = self.demo.audio_path
+        self.demo.history.mark_failed(failed.id, "timeout")
+        saved = self.recording()
+        self.demo.history.save_transcript(saved.id, "Restart fixture", "local", "base")
+        self.demo.history = HistoryStore(Path(self.directory.name) / "data")
+        self.demo.open_history(saved.id)
+        self.assertEqual(self.demo.transcript_text, "Restart fixture")
+        self.assertIsNone(self.demo.audio_path)
+        self.demo.open_history(failed.id)
+        self.assertEqual(self.demo.audio_path, failed_path)
+        self.assertTrue(failed_path.exists())
+
+    def test_cancel_persists_retryable_status(self):
+        entry = self.recording()
+        self.demo.history.mark_transcribing(entry.id)
+        self.demo.transcription_task = SimpleNamespace(cancel=lambda: None)
+        self.demo.state = "transcribing"
+        self.demo.cancel_transcription()
+        self.assertEqual(self.demo.history.get(entry.id).status, "ready")
+        self.assertTrue(self.demo.audio_path.exists())
+
+    def test_eos_persists_finalized_capture(self):
+        entry = self.recording()
+        self.demo.state = "stopping"
+        self.demo.pending_quit = False
+        self.demo.message(None, SimpleNamespace(type="eos"))
+        self.assertEqual(self.demo.history.get(entry.id).status, "ready")
+
+    def test_new_capture_preserves_older_failed_recording(self):
+        older = self.recording()
+        path = self.demo.audio_path
+        self.demo.history.mark_failed(older.id, "timeout")
+        self.demo.devices = [self.device]
+        self.demo.microphone.get_selected = lambda: 0
+        # Missing Gst.parse_launch simulates setup failure after durable allocation.
+        type(self.demo).start_capture(self.demo, "microphone")
+        self.assertNotEqual(self.demo.entry_id, older.id)
+        self.assertTrue(path.exists())
+        self.assertEqual(self.demo.history.get(older.id).status, "failed")
+        self.assertEqual(self.demo.history.get(self.demo.entry_id).status, "failed")
+
+    def test_delete_confirmation_uses_original_id_and_rechecks_busy_state(self):
+        first = self.recording()
+        callbacks = []
+        dialog = SimpleNamespace(choose=lambda window, cancellable, callback: callbacks.append(callback),
+                                 choose_finish=lambda result: 1)
+        self.demo._namespace["Gtk"].AlertDialog = lambda **kwargs: dialog
+        self.demo._namespace["GLib"] = SimpleNamespace(Error=RuntimeError)
+        type(self.demo).confirm_delete_history(self.demo, first.id)
+        second = self.recording()
+        callbacks.pop()(dialog, object())
+        self.assertIsNone(self.demo.history.get(first.id))
+        self.assertIsNotNone(self.demo.history.get(second.id))
+        self.assertEqual(self.demo.entry_id, second.id)
+        type(self.demo).confirm_delete_history(self.demo, second.id)
+        self.demo.state = "recording"
+        callbacks.pop()(dialog, object())
+        self.assertIsNotNone(self.demo.history.get(second.id))
+
+    def test_export_uses_snapshot_and_failure_keeps_unsaved_guard(self):
+        self.recording()
+        self.demo.transcript_text = "original snapshot"
+        self.demo.unsaved = (self.demo.entry_id, "original snapshot", "local", "base")
+        callbacks = []
+        target = Path(self.directory.name) / "export.txt"
+        dialog = SimpleNamespace(save=lambda window, cancellable, callback: callbacks.append(callback),
+            save_finish=lambda result: SimpleNamespace(get_path=lambda: str(target)))
+        namespace = self.demo._namespace
+        namespace["Gtk"].FileDialog = lambda **kwargs: dialog
+        namespace["Path"] = Path
+        namespace["GLib"] = SimpleNamespace(Error=RuntimeError, idle_add=lambda callback,*args: callback(*args))
+        namespace["threading"] = SimpleNamespace(Thread=lambda target,daemon: SimpleNamespace(start=target))
+        from history_store import export_text
+        namespace["export_text"] = export_text
+        self.demo.export_transcript()
+        self.demo.transcript_text = "later mutation"
+        callbacks.pop()(dialog, object())
+        self.assertEqual(target.read_text(), "original snapshot")
+        self.assertIsNone(self.demo.unsaved)
+        self.demo.unsaved = (self.demo.entry_id, "later mutation", "local", "base")
+        namespace["export_text"] = lambda *args: (_ for _ in ()).throw(HistoryError("export"))
+        self.demo.export_transcript()
+        callbacks.pop()(dialog, object())
+        self.assertFalse(self.demo.can_leave_text())
+        self.assertEqual(target.read_text(), "original snapshot")
+        self.assertEqual(self.demo.state, "idle")
+
+    def test_cancel_cannot_unlock_an_export_in_progress(self):
+        self.demo.state = "exporting"
+        self.demo.cancel()
+        self.assertEqual(self.demo.state, "exporting")
+
+    def test_export_cannot_replace_its_own_database(self):
+        self.recording()
+        self.demo.transcript_text = "synthetic export"
+        original = self.demo.history.database.read_bytes()
+        callbacks = []
+        dialog = SimpleNamespace(save=lambda window, cancellable, callback: callbacks.append(callback),
+            save_finish=lambda result: SimpleNamespace(get_path=lambda: str(self.demo.history.database)))
+        namespace = self.demo._namespace
+        namespace["Gtk"].FileDialog = lambda **kwargs: dialog
+        namespace["Path"] = Path
+        namespace["GLib"] = SimpleNamespace(Error=RuntimeError, idle_add=lambda callback,*args: callback(*args))
+        namespace["threading"] = SimpleNamespace(Thread=lambda target,daemon: SimpleNamespace(start=target))
+        from history_store import export_text
+        namespace["export_text"] = export_text
+        self.demo.export_transcript()
+        callbacks.pop()(dialog, object())
+        self.assertEqual(self.demo.history.database.read_bytes(), original)
+        self.assertEqual(self.demo.state, "idle")
+
+    def test_failed_capture_cancel_does_not_claim_deletion_succeeded(self):
+        entry = self.recording()
+        path = self.demo.audio_path
+        messages = []
+        self.demo.say = messages.append
+        self.demo.state = "recording"
+        with patch.object(self.demo.history, "discard_recording", side_effect=HistoryError()):
+            self.demo.cancel()
+        self.assertTrue(path.exists())
+        self.assertIsNotNone(self.demo.history.get(entry.id))
+        self.assertIn("storage", messages[-1].lower())
+
+    def test_failed_finalization_metadata_does_not_claim_save_succeeded(self):
+        self.recording()
+        messages = []
+        self.demo.say = messages.append
+        self.demo.state = "stopping"
+        self.demo.pending_quit = False
+        with patch.object(self.demo.history, "mark_ready", side_effect=HistoryError()):
+            self.demo.message(None, SimpleNamespace(type="eos"))
+        self.assertIn("storage", messages[-1].lower())

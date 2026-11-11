@@ -1,7 +1,7 @@
 # Ubuntu transcription prototype
 
 Record locally, explicitly transcribe through a small CPU container, then display
-and copy the transcript. This is a development prototype, not full Mac parity.
+save, reopen, export and copy the transcript. This is a development prototype, not full Mac parity.
 
 ## Start on Ubuntu 24.04 / GNOME
 
@@ -29,7 +29,7 @@ No transcription starts on launch, recording Stop, or playback. During
 transcription, Cancel stops the UI operation, attempts to close the connection,
 and retains the WAV for retry. The model may finish its already-started CPU work
 before becoming available for another request. No automatic cloud fallback or
-request retry is performed. Use **Delete recording** when idle to delete audio.
+request retry is performed. Delete an entry explicitly through the history controls.
 
 The small multilingual `base` model supports testing German/English; recording
 quality and recognition accuracy still need evaluation on your own speech. It
@@ -41,12 +41,36 @@ before deployment. Model revision is pinned in the Dockerfile.
 
 - WAV only, at most five minutes and 20 MiB. Longer meetings need a later chunking
   implementation; this prototype rejects them rather than truncating.
-- Transcripts exist in the window only. Copy text before quitting; history and
-  crash recovery are not implemented.
-- A new recording replaces the previous test audio and clears its old text.
-  Cancelled/failed transcription preserves audio while the window is running.
-- Normal Quit removes private temporary audio. A process crash can leave test
-  files in the OS temporary directory. Never kill a recording to refresh code.
+- Transcripts and recording metadata are stored in a private SQLite database at
+  `$XDG_DATA_HOME/whispershortcut/history.sqlite3`, or
+  `~/.local/share/whispershortcut/history.sqlite3` when XDG_DATA_HOME is unset.
+  App/recording directories use mode 0700; database/audio/export files use 0600.
+  These are local plaintext files, protected by OS permissions, not encryption.
+- Successful transcription saves the text before deleting its audio. Failed,
+  cancelled-transcription and untranscribed recordings remain across restarts,
+  including when a new recording starts. There is no automatic expiry or pruning.
+  Explicit cancellation of an active capture discards that unfinished recording.
+- Startup restores the latest entry and marks interrupted operations. Incomplete
+  WAV headers after a capture failure/crash may prevent playback/transcription;
+  retaining a file is not a guarantee that damaged audio can be repaired.
+- History is shown in pages of 100 summaries. Select a row and click **Open
+  selected** to display its text or load its retained audio for **Transcribe**.
+  Choosing a dropdown row alone does not change the currently opened transcript.
+- **Export transcript** writes the displayed text as UTF-8 to a chosen local
+  file. **Delete selected** confirms deletion of that history entry and any audio;
+  **Delete recording** confirms deletion of the currently opened entry, including
+  its saved transcript. Deletion does not remove separately exported files and
+  does not promise forensic secure erasure.
+- If saving fails, the result remains visible and its audio is kept. **Retry saving
+  transcript** retries the database write. A successful export also allows leaving
+  the result; this does not put the exported text into history automatically.
+  Copy alone does not remove the unsaved-result guard.
+- `WHISPER_SHORTCUT_DATA_DIR=/absolute/private/test-directory` overrides the data
+  root for isolated development. Use a dedicated directory. Unknown future
+  database schema versions are refused without replacing existing contents.
+- Never kill a recording to refresh code. Small SQLite operations currently run
+  on GTK with a 100 ms database-lock timeout; export uses a worker thread. A very
+  slow filesystem can still delay metadata operations in this prototype.
 - The local service processes audio in memory, logs neither content nor requests,
   and receives no OpenRouter key. Service access is limited to host loopback;
   processes on the same computer can still access it.
@@ -100,6 +124,8 @@ tests fake the model and never download weights or make external API requests.
 bash scripts/linux/probe-desktop.sh --json
 bash scripts/linux/test.sh
 bash scripts/linux/run-prototype.sh --smoke-test
+# Synthetic history/restart/export/delete desktop check in an isolated data root:
+/usr/bin/python3 scripts/linux/tests/check-history-desktop.py
 ```
 
 The smoke check refuses to replace an existing instance. Quit normally before a
