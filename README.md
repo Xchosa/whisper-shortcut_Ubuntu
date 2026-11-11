@@ -1,5 +1,9 @@
 # WhisperShortcut
 
+Ubuntu fork: [start and test the Linux prototype](apps/linux/prototype/README.md).
+Local CPU dictation now includes persistent history, text export and retained
+recordings for retry. The macOS features documented below are not yet Ubuntu parity.
+
 **Voice-first AI for your Mac.** Press ⌃⌥1 anywhere, speak, and the transcription inserts at the cursor — auto-paste, off by default and direct-download only — or lands on the clipboard, ready to paste into any app. Speak an instruction (⌘2) to rewrite whatever you copied, have any selected text read aloud (⌘4), or open an AI chat that works with your Calendar, Gmail, Tasks, and Trello (⌥Space).
 
 Bring your own API keys — Gemini, and optionally GPT, Grok, or Claude — or run fully offline with local Whisper. No account, no subscription, no backend. Open source (AGPL-3.0).

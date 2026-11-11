@@ -10,6 +10,8 @@
 
 **Spec:** Approved multiplatform design's SQLite/data-retention rules and user's “genau richtig, mach weiter” approval of the proposed history/export/retry slice.
 
+**Status:** Implemented and locally verified on Ubuntu, 2026-11-11. Integration remains a feature-branch PR; no merge or release.
+
 ## Global constraints
 
 - Continue native execution without repeating scope approval. No model/provider, container or Mac runtime change.
@@ -38,39 +40,41 @@ Files: create apps/linux/prototype/history_store.py and tests/test_history_store
 
 Interfaces: HistoryStore(root=None); create_recording()->Entry; audio_path(id)->Path; get(id)->Entry|None; list_entries(limit=100,offset=0)->list[Summary]; mark_ready/transcribing/failed/cancelled; save_transcript(id,text,provider,model)->bool audio_cleaned; delete(id); discard_recording(id). export_text(text,path) performs atomic UTF-8 output.
 
-- [ ] Test reopen, timestamps/order/pagination, successful save+audio cleanup, failed/cancelled retry persistence, interrupted/orphan recovery.
-- [ ] Test unknown schemas, locked DB, injected SQL-like text, safe IDs/symlinks, private permissions, failed cleanup and deletion/export failure retention. Watch RED before implementation.
-- [ ] Implement SQLite version 1 with bound parameters, private paths and ordered transactions; no dependencies.
-- [ ] Run full Linux suite and commit.
+- [x] Test reopen, timestamps/order/pagination, successful save+audio cleanup, failed/cancelled retry persistence, interrupted/orphan recovery.
+- [x] Test unknown schemas, locked DB, injected SQL-like text, safe IDs/symlinks, private permissions, failed cleanup and deletion/export failure retention. Watch RED before implementation.
+- [x] Implement SQLite version 1 with bound parameters, private paths and ordered transactions; no dependencies.
+- [x] Run full Linux suite and commit.
 
 ## Task 2: Recorder and job retention lifecycle
 
 Files: modify desktop_demo.py and tests/test_demo_lifecycle.py.
 
-- [ ] Add RED tests for durable capture allocation, save-before-cleanup, persistence failure, failed/cancelled retry, new recording preserving older audio, and startup restoration.
-- [ ] Allocate a managed recording before capture; mark ready after finalized EOS. Preserve capture errors as interrupted/failed; explicit cancellation can discard unfinished capture.
-- [ ] Save successful results before releasing audio; retain copy/export access and block losing an unsaved result on storage error. Provide Retry save.
-- [ ] Initialize history only during primary activation; secondary command instances must not mark a live request interrupted.
-- [ ] Keep copy/job identity/recording guards and run the full suite; commit.
+- [x] Add RED tests for durable capture allocation, save-before-cleanup, persistence failure, failed/cancelled retry, new recording preserving older audio, and startup restoration.
+- [x] Allocate a managed recording before capture; mark ready after finalized EOS. Preserve capture errors as interrupted/failed; explicit cancellation can discard unfinished capture.
+- [x] Save successful results before releasing audio; retain copy/export access and block losing an unsaved result on storage error. Provide Retry save.
+- [x] Initialize history only during primary activation; secondary command instances must not mark a live request interrupted.
+- [x] Keep copy/job identity/recording guards and run the full suite; commit.
 
 ## Task 3: History panel, export and deletion
 
 Files: create history_panel.py; modify desktop_demo.py and po/de.po.
 
-- [ ] Add history summaries, newer/older paging, explicit Open selected, Delete selected, Retry save and Export displayed text.
-- [ ] Show local timestamps/statuses; restore the latest saved/retained entry on startup. Open is idle-only and does not auto-transcribe.
-- [ ] Native save dialog captures text before async completion; export on worker, then deliver only to the matching operation.
-- [ ] Confirm entry deletion and recheck active-operation state on dialog completion. Saved text and audio deletion remain distinct, explicit actions.
-- [ ] Test guards/snapshots/failure paths; run English/German real GTK checks in isolated data roots. Commit.
+- [x] Add history summaries, newer/older paging, explicit Open selected, Delete selected, Retry save and Export displayed text.
+- [x] Show local timestamps/statuses; restore the latest saved/retained entry on startup. Open is idle-only and does not auto-transcribe.
+- [x] Native save dialog captures text before async completion; export on worker, then deliver only to the matching operation.
+- [x] Confirm entry deletion and recheck active-operation state on dialog completion. Saved text and audio deletion remain distinct, explicit actions.
+- [x] Test guards/snapshots/failure paths; run English/German real GTK checks in isolated data roots. Commit.
 
 ## Task 4: End-to-end validation and delivery
 
-- [ ] Use synthetic/private-to-test-root content only: create/save, exit, reopen, copy/export/delete, and failed-audio retry. Do not touch user's existing data.
-- [ ] Verify permission/schema/privacy checks, full headless suite, compile/shell/whitespace and safe startup.
-- [ ] Independent final code review; fix Important/Critical findings RED→GREEN and rerun checks.
-- [ ] Update current README/data documentation, user-confirmed local speech evidence and complete verbatim validation.
-- [ ] Commit explicit files, push branch and open draft PR. Do not merge/release or interrupt a recording.
+- [x] Use synthetic/private-to-test-root content only: create/save, exit, reopen, copy/export/delete, and failed-audio retry. Do not touch user's existing data.
+- [x] Verify permission/schema/privacy checks, full headless suite, compile/shell/whitespace and safe startup.
+- [x] Independent final code review; fix Important/Critical findings RED→GREEN and rerun checks.
+- [x] Update current README/data documentation, user-confirmed local speech evidence and complete verbatim validation.
+- [x] Commit explicit files, push branch and open draft PR. Do not merge/release or interrupt a recording.
 
 ## Decisions and limits
 
 SQLite replaces JSON-per-transcript to keep updates/order/versioning in one transaction. Audio stays in separate files so failed clips are reusable without database blobs. Filesystem deletion and DB commits cannot form one transaction: begin write ownership before destructive work, retain metadata on unlink failure, and reconcile successful/orphan files on startup. Export is an explicit plaintext file chosen by the user. Full production packaging, chat, TTS and long meeting recovery stay later work.
+
+Execution note: Tasks 1–3 share the recorder/storage lifecycle and landed as one integrated implementation commit after independent review, rather than intermediate per-task commits. Validation and review dispositions are in `docs/development/ubuntu-history-handover.md`; full final test output is in `ubuntu-history-validation.txt`.

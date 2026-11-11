@@ -253,3 +253,99 @@ msgstr "Stoppen Sie den aktiven Vorgang oder brechen Sie diesen vor dem Löschen
 
 msgid "Recording deleted."
 msgstr "Aufnahme gelöscht."
+
+msgid "Transcripts are saved locally. Failed recordings remain available for retry."
+msgstr "Transkripte werden lokal gespeichert. Fehlgeschlagene Aufnahmen bleiben für einen erneuten Versuch erhalten."
+
+msgid "Retry saving transcript"
+msgstr "Transkript erneut speichern"
+
+msgid "Export transcript"
+msgstr "Transkript exportieren"
+
+msgid "Audio finalization timed out; recording retained for inspection."
+msgstr "Zeitüberschreitung beim Abschließen; die Aufnahme bleibt zur Prüfung erhalten."
+
+msgid "Transcript could not be saved. Retry saving or export it before continuing."
+msgstr "Das Transkript konnte nicht gespeichert werden. Speichern Sie es erneut oder exportieren Sie es vor dem Fortfahren."
+
+msgid "Transcript saved locally. Use Copy or Export to share it."
+msgstr "Transkript lokal gespeichert. Mit Kopieren oder Exportieren können Sie es weitergeben."
+
+msgid "Saved transcript opened."
+msgstr "Gespeichertes Transkript geöffnet."
+
+msgid "Recording opened. Use Play or Transcribe to retry."
+msgstr "Aufnahme geöffnet. Verwenden Sie Abspielen oder Transkribieren für einen erneuten Versuch."
+
+msgid "Delete this history entry and its recording?"
+msgstr "Diesen Verlaufseintrag und seine Aufnahme löschen?"
+
+msgid "Keep"
+msgstr "Behalten"
+
+msgid "Delete"
+msgstr "Löschen"
+
+msgid "History entry deleted."
+msgstr "Verlaufseintrag gelöscht."
+
+msgid "No idle transcript is available for export."
+msgstr "Es ist kein Transkript für den Export verfügbar oder ein Vorgang ist aktiv."
+
+msgid "Transcript exported."
+msgstr "Transkript exportiert."
+
+msgid "Local history"
+msgstr "Lokaler Verlauf"
+
+msgid "No saved entries"
+msgstr "Keine gespeicherten Einträge"
+
+msgid "Open selected"
+msgstr "Auswahl öffnen"
+
+msgid "Delete selected"
+msgstr "Auswahl löschen"
+
+msgid "Newer"
+msgstr "Neuere"
+
+msgid "Older"
+msgstr "Ältere"
+
+msgid "Unknown date"
+msgstr "Unbekanntes Datum"
+
+msgid "recording"
+msgstr "Aufnahme läuft"
+
+msgid "ready"
+msgstr "Bereit"
+
+msgid "transcribing"
+msgstr "Transkription läuft"
+
+msgid "completed"
+msgstr "Abgeschlossen"
+
+msgid "failed"
+msgstr "Fehlgeschlagen"
+
+msgid "interrupted"
+msgstr "Unterbrochen"
+
+msgid "History storage is unavailable. Your existing data has not been replaced."
+msgstr "Der Verlaufsspeicher ist nicht verfügbar. Ihre bestehenden Daten wurden nicht ersetzt."
+
+msgid "This history database needs a newer app version. It has not been changed."
+msgstr "Diese Verlaufsdatenbank benötigt eine neuere App-Version. Sie wurde nicht geändert."
+
+msgid "The selected history entry is unavailable."
+msgstr "Der ausgewählte Verlaufseintrag ist nicht verfügbar."
+
+msgid "Stop or cancel the active operation before changing history."
+msgstr "Stoppen Sie den aktiven Vorgang oder brechen Sie ihn vor dem Ändern des Verlaufs ab."
+
+msgid "The text export failed. Your transcript remains available."
+msgstr "Der Textexport ist fehlgeschlagen. Ihr Transkript bleibt verfügbar."
