@@ -21,6 +21,8 @@ from transcription_client import TranscriptionError
 from transcription_job import TranscriptionJob
 from history_store import HistoryStore, HistoryError, export_text
 from history_panel import HistoryPanel
+from live_controller import LiveController
+from capture_pipeline import capture_description
 
 Gst.init(None)
 APP_ID = "io.github.Xchosa.WhisperShortcut.Prototype"
@@ -78,6 +80,7 @@ class Demo(Gtk.Application):
         self.transcription_task = None
         self.transcript_text = ""
         self.visible_provider = "local"
+        self.live = LiveController(self, lambda callback: GLib.idle_add(callback), GLib.timeout_add)
 
     def do_command_line(self, command_line):
         options = command_line.get_options_dict()
@@ -109,18 +112,22 @@ class Demo(Gtk.Application):
         page = Gtk.ScrolledWindow()
         page.set_child(box)
         self.window.set_child(page)
-        warning = Gtk.Label(label=_("Transcription uses the local container by default. OpenRouter requires explicit cloud configuration. Nothing is transcribed until you click Transcribe."),
+        warning = Gtk.Label(label=_("Transcription uses the local container by default. OpenRouter requires explicit cloud configuration. Live mode transcribes while recording; switch it off for manual transcription."),
                             wrap=True, xalign=0)
         box.append(warning)
         self.status = Gtk.Label(label=_("Idle"), wrap=True, xalign=0)
         box.append(self.status)
         box.append(Gtk.Label(label=_("Transcript"), xalign=0))
-        transcript = Gtk.TextView(editable=False, wrap_mode=Gtk.WrapMode.WORD_CHAR)
+        transcript = Gtk.TextView(editable=True, wrap_mode=Gtk.WrapMode.WORD_CHAR)
         transcript.set_tooltip_text(_("Transcripts are saved locally. Failed recordings remain available for retry."))
         self.transcript_buffer = transcript.get_buffer()
+        self.transcript_buffer.connect("changed", self.live.changed)
         transcript_scroll = Gtk.ScrolledWindow(min_content_height=140)
         transcript_scroll.set_child(transcript)
         box.append(transcript_scroll)
+        self.live_checkbox = Gtk.CheckButton(label=_("Live transcription (local CPU)"))
+        self.live_checkbox.set_active(True)
+        box.append(self.live_checkbox)
         self.history_panel = HistoryPanel(_, self.open_history, self.confirm_delete_history, self.page_history)
         box.append(self.history_panel.widget)
         self.microphone = Gtk.DropDown.new_from_strings([_("Finding audio sources…")])
@@ -241,6 +248,16 @@ class Demo(Gtk.Application):
         if not self.history:
             self.say(str(HistoryError()))
             return
+        live_config = None
+        if self.live_checkbox.get_active():
+            try:
+                live_config = load_config()
+            except ConfigError as error:
+                self.say(str(error))
+                return
+            if live_config.provider != "local":
+                self.say("Live transcription requires local mode. Disable Live for manual cloud transcription.")
+                return
         index = self.microphone.get_selected()
         if mode != "system" and index >= len(self.devices):
             self.say("No microphone sources found")
@@ -252,13 +269,10 @@ class Demo(Gtk.Application):
             return
         self.entry_id = entry.id
         self.audio_path = self.history.audio_path(entry.id)
-        self.transcript_text = ""
-        self.transcript_buffer.set_text("")
+        self.set_displayed_text("")
         self.refresh_history()
         try:
-            pipeline = Gst.parse_launch(
-                "audiomixer name=mix ! audioconvert ! audioresample ! "
-                "audio/x-raw,format=S16LE,rate=16000,channels=1 ! wavenc ! filesink name=output")
+            pipeline = Gst.parse_launch(capture_description(live_config is not None))
             self.pipeline = pipeline
             pipeline.get_by_name("output").set_property("location", str(self.audio_path))
             sources = []
@@ -285,17 +299,47 @@ class Demo(Gtk.Application):
                         raise RuntimeError("Audio link failed")
                 if not chain[-1].link(pipeline.get_by_name("mix")):
                     raise RuntimeError("Audio mixer link failed")
+            if live_config:
+                session = self.live.start(live_config)
+                pipeline.get_by_name("live").connect("new-sample", self.live_sample, session)
             self.watch_pipeline()
             self.state = "recording"
             self.started_at = time.monotonic()
             if pipeline.set_state(Gst.State.PLAYING) == Gst.StateChangeReturn.FAILURE:
                 raise RuntimeError("Audio start failed")
-            self.say("Recording — use Stop to finalize or Cancel to delete.")
+            self.say("Recording with live text — corrections are kept; new text is appended." if live_config
+                     else "Recording — use Stop to finalize or Cancel to delete.")
         except Exception:
             self.release_pipeline()
+            if self.live.active:
+                self.live.cancel()
             self.state = "idle"
             self.persist_status("mark_failed", "capture")
             self.say("Audio capture failed. Check source, permissions and device availability.")
+
+    def live_sample(self, sink, session):
+        sample = sink.emit("pull-sample")
+        if sample is None:
+            return Gst.FlowReturn.EOS
+        buffer = sample.get_buffer()
+        if session.feed(buffer.extract_dup(0, buffer.get_size())):
+            GLib.idle_add(self.live_limit_reached, session)
+        return Gst.FlowReturn.OK
+
+    def live_limit_reached(self, session):
+        if self.live.session is session and self.state == "recording":
+            self.stop()
+        return False
+
+    def set_displayed_text(self, text):
+        if self.entry_id is None:
+            self.live.discard_draft()
+        self.live.replacing = True
+        try:
+            self.transcript_text = text
+            self.transcript_buffer.set_text(text)
+        finally:
+            self.live.replacing = False
 
     def watch_pipeline(self):
         self.bus = self.pipeline.get_bus()
@@ -309,15 +353,22 @@ class Demo(Gtk.Application):
             self.release_pipeline()
             was_capture = self.state in {"recording", "stopping"}
             self.state = "idle"
+            if self.live.active:
+                self.live.cancel()
             if was_capture:
                 self.persist_status("mark_failed", "capture")
             self.say("Audio operation failed. Check device availability.")
         elif message.type == Gst.MessageType.EOS:
-            was_capture = self.state == "stopping"
+            was_capture = self.state in {"recording", "stopping"}
             self.release_pipeline()
             self.state = "idle"
-            if was_capture and not self.persist_status("mark_ready"):
-                return
+            if was_capture:
+                saved = self.persist_status("mark_ready")
+                if self.live.active:
+                    self.live.capture_stopped()
+                    return
+                if not saved:
+                    return
             self.say("Recording saved locally. Listen back to verify both content and sources."
                      if was_capture else "Playback finished.")
             if self.pending_quit:
@@ -325,6 +376,11 @@ class Demo(Gtk.Application):
 
     def tick(self):
         if self.state == "recording":
+            if self.live.active and time.monotonic() - self.started_at >= 300:
+                self.stop()
+                return True
+            if self.live.error and self.live.active:
+                return True
             self.status.set_text(_("Recording — seconds elapsed: {seconds}").format(
                 seconds=int(time.monotonic() - self.started_at)))
         return True
@@ -332,7 +388,7 @@ class Demo(Gtk.Application):
     def stop(self):
         self.pending_toggle = False
         if self.state == "transcribing":
-            self.cancel_transcription()
+            self.cancel()
             return
         if self.state == "recording":
             self.state = "stopping"
@@ -345,6 +401,8 @@ class Demo(Gtk.Application):
     def stop_failed(self):
         self.stop_timeout = None
         self.release_pipeline()
+        if self.live.active:
+            self.live.cancel()
         self.state = "idle"
         self.persist_status("mark_failed", "capture")
         self.pending_quit = False
@@ -377,8 +435,7 @@ class Demo(Gtk.Application):
                 return False
             self.entry_id = None
             self.audio_path = None
-            self.transcript_text = ""
-            self.transcript_buffer.set_text("")
+            self.set_displayed_text("")
             self.refresh_history()
         return True
 
@@ -387,6 +444,10 @@ class Demo(Gtk.Application):
         if self.state == "exporting":
             self.say("Another operation is active.")
             return
+        if self.live.active:
+            self.release_pipeline()
+            self.live.cancel()
+            return
         if self.state == "transcribing":
             self.cancel_transcription()
             return
@@ -394,6 +455,12 @@ class Demo(Gtk.Application):
             delete_audio = self.state in {"recording", "stopping"}
         self.release_pipeline()
         self.state = "idle"
+        if delete_audio and self.transcript_text:
+            if not self.live.checkpoint():
+                return
+            self.persist_status("mark_failed", "cancelled")
+            self.say("Recording cancelled. Edited text and recording are kept.")
+            return
         if delete_audio and not self.delete_audio():
             return
         self.say("Idle")
@@ -402,11 +469,14 @@ class Demo(Gtk.Application):
         if self.state != "idle":
             self.say("Stop or cancel the active operation before deleting the recording.")
             return
-        if self.entry_id:
+        if self.can_leave_text() and self.entry_id:
             self.confirm_delete_history(self.entry_id)
 
     def show_provider(self, config):
         self.visible_provider = config.provider
+        self.live_checkbox.set_sensitive(config.provider == "local")
+        if config.provider != "local":
+            self.live_checkbox.set_active(False)
         label = ("Transcribe recording (local CPU)" if config.provider == "local"
                  else "Transcribe recording (OpenRouter cloud)")
         self.transcribe_button.set_label(_(label))
@@ -416,6 +486,9 @@ class Demo(Gtk.Application):
             self.say("Another operation is active.")
             return
         if not self.can_leave_text():
+            return
+        if self.transcript_text.strip():
+            self.say("This entry already contains text. Keep or export your edits; clear the editor explicitly before replacing it by transcription.")
             return
         if not self.audio_path or not self.audio_path.exists():
             self.say("No completed recording is available.")
@@ -456,9 +529,13 @@ class Demo(Gtk.Application):
             self.persist_status("mark_failed", "response")
             self.say(TranscriptionError("response").message)
             return
-        self.transcript_text = text
-        self.transcript_buffer.set_text(text)
-        self.unsaved = (self.entry_id, text, job.config.provider, job.config.model)
+        if self.transcript_text:
+            combined = self.transcript_text + "\n" + text
+            self.transcript_buffer.insert(self.transcript_buffer.get_end_iter(), "\n" + text)
+            self.transcript_text = combined
+        else:
+            self.set_displayed_text(text)
+        self.unsaved = (self.entry_id, self.transcript_text, job.config.provider, job.config.model)
         self.retry_save()
 
     def cancel_transcription(self):
@@ -478,6 +555,8 @@ class Demo(Gtk.Application):
         self.say("Transcript copied.")
 
     def can_leave_text(self):
+        if not self.live.checkpoint():
+            return False
         if self.unsaved:
             self.say("Transcript could not be saved. Retry saving or export it before continuing.")
             return False
@@ -495,7 +574,9 @@ class Demo(Gtk.Application):
             return False
 
     def retry_save(self):
-        if self.state != "idle" or not self.unsaved:
+        if self.state != "idle" or not self.live.checkpoint():
+            return
+        if not self.unsaved:
             return
         try:
             removed = self.history.save_transcript(*self.unsaved)
@@ -530,8 +611,7 @@ class Demo(Gtk.Application):
             self.entry_id = entry.id
             path = self.history.audio_path(entry.id)
             self.audio_path = path if path.exists() else None
-            self.transcript_text = entry.text
-            self.transcript_buffer.set_text(entry.text)
+            self.set_displayed_text(entry.text)
             self.say("Saved transcript opened." if entry.text else
                      "Recording opened. Use Play or Transcribe to retry.")
         except HistoryError as error:
@@ -555,8 +635,7 @@ class Demo(Gtk.Application):
                 if self.entry_id == entry_id:
                     self.entry_id = None
                     self.audio_path = None
-                    self.transcript_text = ""
-                    self.transcript_buffer.set_text("")
+                    self.set_displayed_text("")
                 self.refresh_history()
                 self.say("History entry deleted.")
             except HistoryError as error:
@@ -576,7 +655,7 @@ class Demo(Gtk.Application):
             try:
                 file = source.save_finish(result)
                 path = file.get_path()
-                if path is None or Path(path).resolve().is_relative_to(self.history.root.resolve()):
+                if path is None or (self.history and Path(path).resolve().is_relative_to(self.history.root.resolve())):
                     raise HistoryError("export")
             except GLib.Error:
                 self.state = "idle"
@@ -604,6 +683,7 @@ class Demo(Gtk.Application):
             if error:
                 self.say(error)
             else:
+                self.live.exported(text)
                 if self.unsaved is pending:
                     self.unsaved = None  # Export is a durable alternative when DB is unavailable.
                     if pending:
@@ -725,6 +805,9 @@ class Demo(Gtk.Application):
 
     def do_shutdown(self):
         self.pending_toggle = False
+        if self.live.active:
+            self.live.cancel()
+        self.live.checkpoint()
         if self.transcription_task:
             self.cancel_transcription()
         self.release_pipeline()

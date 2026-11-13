@@ -10,6 +10,7 @@ from unittest.mock import patch
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from transcription_client import TranscriptionError
 from history_store import HistoryStore, HistoryError
+from capture_pipeline import capture_description
 
 
 def demo_type():
@@ -19,7 +20,7 @@ def demo_type():
              "do_command_line", "close_window", "transcribe_recording",
              "finish_transcription", "cancel_transcription", "copy_transcript", "delete_recording",
              "can_leave_text", "persist_status", "retry_save", "open_history",
-             "export_transcript", "confirm_delete_history", "start_capture"}
+             "export_transcript", "confirm_delete_history", "start_capture", "set_displayed_text"}
     # Execute these exact methods, isolating only GTK's inheritance/import boundary.
     original.bases = []
     original.body = [node for node in original.body if isinstance(node, ast.FunctionDef) and node.name in names]
@@ -30,6 +31,7 @@ def demo_type():
         "Gst": SimpleNamespace(MessageType=SimpleNamespace(ERROR="error", EOS="eos")),
         "TranscriptionError": TranscriptionError,
         "HistoryError": HistoryError,
+        "capture_description": capture_description,
     }
     exec(compile(module, "<real desktop demo methods>", "exec"), namespace)
     namespace["Demo"]._namespace = namespace
@@ -51,6 +53,9 @@ class DemoLifecycleTests(unittest.TestCase):
         self.demo.audio_path = None
         self.demo.transcription_task = None
         self.demo.transcript_text = ""
+        self.demo.live = SimpleNamespace(active=False, replacing=False, checkpoint=lambda: True,
+            discard_draft=lambda: None, exported=lambda snapshot: None)
+        self.demo.live_checkbox = SimpleNamespace(get_active=lambda: False)
         self.displayed = []
         self.copied = []
         self.demo.transcript_buffer = SimpleNamespace(set_text=self.displayed.append)
@@ -368,3 +373,48 @@ class DemoLifecycleTests(unittest.TestCase):
         with patch.object(self.demo.history, "mark_ready", side_effect=HistoryError()):
             self.demo.message(None, SimpleNamespace(type="eos"))
         self.assertIn("storage", messages[-1].lower())
+
+    def test_batch_completion_does_not_replace_text_typed_while_waiting(self):
+        entry = self.recording()
+        current = ['typed correction']
+        self.demo.transcript_text = current[0]
+        self.demo.transcript_buffer = SimpleNamespace(
+            get_end_iter=lambda: len(current[0]),
+            insert=lambda end,text: current.__setitem__(0, current[0][:end] + text + current[0][end:]),
+            set_text=lambda text: current.__setitem__(0, text))
+        job = SimpleNamespace(config=SimpleNamespace(provider='local', model='base'))
+        self.demo.transcription_task = job
+        self.demo.state = 'transcribing'
+        self.demo.finish_transcription(job, 'recognized words', None)
+        self.assertEqual(current[0], 'typed correction\nrecognized words')
+        self.assertEqual(self.demo.history.get(entry.id).text, current[0])
+
+    def test_cancel_manual_capture_preserves_typed_draft_and_does_not_lock_ui(self):
+        from live_controller import LiveController
+        from test_live_controller import Buffer
+        entry = self.recording()
+        self.demo.state = 'recording'
+        self.demo.live = LiveController(self.demo, lambda callback: callback(), lambda ms,callback: 1)
+        self.demo.transcript_buffer = Buffer()
+        self.demo.transcript_buffer.changed = self.demo.live.changed
+        self.demo.transcript_buffer.text = 'typed manual draft'
+        self.demo.live.changed(self.demo.transcript_buffer)
+        self.demo.cancel()
+        self.assertIsNotNone(self.demo.history.get(entry.id))
+        self.assertEqual(self.demo.history.get(entry.id).text, 'typed manual draft')
+        self.assertTrue(self.demo.can_leave_text())
+
+    def test_stop_during_live_drain_cancels_live_session_and_ignores_late_output(self):
+        from live_controller import LiveController
+        entry = self.recording()
+        self.demo.live = LiveController(self.demo, lambda callback: callback(), lambda ms,callback: 1)
+        cancelled = []
+        session = SimpleNamespace(cancel=lambda: cancelled.append(True))
+        self.demo.live.session = session
+        self.demo.state = 'transcribing'
+        self.demo.stop()
+        self.demo.live.receive(session, 'late output', None, True)
+        self.assertEqual(cancelled, [True])
+        self.assertEqual(self.demo.state, 'idle')
+        self.assertEqual(self.demo.transcript_text, '')
+        self.assertTrue(self.demo.history.audio_path(entry.id).exists())

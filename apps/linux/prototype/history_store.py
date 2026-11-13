@@ -202,6 +202,25 @@ class HistoryStore:
     def mark_cancelled(self, entry_id):
         self._status(entry_id, "ready")
 
+    def create_text(self, text):
+        if not isinstance(text, str) or len(text.encode('utf-8')) > MAX_TEXT_BYTES:
+            raise HistoryError()
+        entry_id, stamp = uuid.uuid4().hex, now()
+        with self._connection() as db:
+            db.execute("""INSERT INTO entries(id,created_at,updated_at,status,transcript,provider)
+                          VALUES(?,?,?,'completed',?,'manual')""", (entry_id, stamp, stamp, text))
+        return self.get(entry_id)
+
+    def update_text(self, entry_id, text):
+        self.audio_path(entry_id)
+        if not isinstance(text, str) or len(text.encode('utf-8')) > MAX_TEXT_BYTES:
+            raise HistoryError()
+        with self._connection() as db:
+            changed = db.execute("UPDATE entries SET transcript=?,updated_at=? WHERE id=?",
+                                 (text, now(), entry_id)).rowcount
+            if not changed:
+                raise HistoryError('entry')
+
     def save_transcript(self, entry_id, text, provider, model):
         path = self.audio_path(entry_id)
         if not isinstance(text, str) or not text.strip() or len(text.encode("utf-8")) > MAX_TEXT_BYTES:

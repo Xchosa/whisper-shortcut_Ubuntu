@@ -69,7 +69,7 @@ def read_audio(path: Path, cancelled) -> bytes:
     return audio
 
 
-def transcribe(path, config, cancelled, attach_connection, *, connection_factory=None) -> str:
+def transcribe(path, config, cancelled, attach_connection, *, connection_factory=None, allow_empty=False) -> str:
     audio = read_audio(path, cancelled)
     body = json.dumps({
         "model": config.model,
@@ -121,7 +121,7 @@ def transcribe(path, config, cancelled, attach_connection, *, connection_factory
         except (ValueError, UnicodeError):
             raise TranscriptionError("response") from None
         text = payload.get("text") if isinstance(payload, dict) else None
-        if not isinstance(text, str) or not text.strip():
+        if not isinstance(text, str) or (not text.strip() and not (allow_empty and local)):
             raise TranscriptionError("response")
         return text.strip()
     except TranscriptionError:

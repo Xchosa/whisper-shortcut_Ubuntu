@@ -135,3 +135,39 @@ class LocalServiceTests(unittest.TestCase):
         self.assertEqual(seen["device"], "cpu")
         self.assertEqual(seen["compute_type"], "int8")
         self.assertTrue(seen["local_files_only"])
+
+class LiveResponseTests(unittest.TestCase):
+    def test_only_explicit_live_local_requests_allow_empty_text(self):
+        import tempfile
+        from test_openrouter_transcription import Response
+        from transcription_config import TranscriptionConfig
+        from transcription_client import TranscriptionError
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'silence.wav'
+            path.write_bytes(wav_bytes())
+            for provider, allow_empty, valid in [
+                (LocalTranscriptionConfig(), True, True),
+                (LocalTranscriptionConfig(), False, False),
+                (TranscriptionConfig('synthetic', 'test/model'), True, False),
+            ]:
+                connection = Connection(Response(body=b'{"text":""}'))
+                call = lambda: transcribe(path, provider, threading.Event(), lambda conn: None,
+                    connection_factory=lambda *args, **kwargs: connection, allow_empty=allow_empty)
+                if valid:
+                    self.assertEqual(call(), '')
+                else:
+                    with self.assertRaises(TranscriptionError):
+                        call()
+
+    def test_live_mode_still_rejects_missing_text_and_invalid_json(self):
+        import tempfile
+        from test_openrouter_transcription import Response
+        from transcription_client import TranscriptionError
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'silence.wav'
+            path.write_bytes(wav_bytes())
+            for body in [b'{}', b'not-json', b'{"text":null}']:
+                connection = Connection(Response(body=body))
+                with self.assertRaises(TranscriptionError):
+                    transcribe(path, LocalTranscriptionConfig(), threading.Event(), lambda conn: None,
+                        connection_factory=lambda *args,**kwargs: connection, allow_empty=True)

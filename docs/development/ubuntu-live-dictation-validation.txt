@@ -1,0 +1,148 @@
+Ubuntu editable live dictation — local verification
+
+$ env -u DISPLAY -u WAYLAND_DISPLAY bash scripts/linux/test.sh
+Exit status: 0
+test_historical_jobs_refuse_before_host_commands (test_tooling_guards.ToolingGuardsTests.test_historical_jobs_refuse_before_host_commands) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 0.023s
+
+OK
+test_authorized_deferred_capture_is_consumed_once (test_demo_lifecycle.DemoLifecycleTests.test_authorized_deferred_capture_is_consumed_once) ... ok
+test_batch_completion_does_not_replace_text_typed_while_waiting (test_demo_lifecycle.DemoLifecycleTests.test_batch_completion_does_not_replace_text_typed_while_waiting) ... ok
+test_cancel_cannot_unlock_an_export_in_progress (test_demo_lifecycle.DemoLifecycleTests.test_cancel_cannot_unlock_an_export_in_progress) ... ok
+test_cancel_manual_capture_preserves_typed_draft_and_does_not_lock_ui (test_demo_lifecycle.DemoLifecycleTests.test_cancel_manual_capture_preserves_typed_draft_and_does_not_lock_ui) ... ok
+test_cancel_persists_retryable_status (test_demo_lifecycle.DemoLifecycleTests.test_cancel_persists_retryable_status) ... ok
+test_cancel_revokes_capture_waiting_for_discovery (test_demo_lifecycle.DemoLifecycleTests.test_cancel_revokes_capture_waiting_for_discovery) ... ok
+test_cancel_transcription_preserves_recording_and_rejects_late_result (test_demo_lifecycle.DemoLifecycleTests.test_cancel_transcription_preserves_recording_and_rejects_late_result) ... ok
+test_cancel_when_idle_preserves_completed_recording (test_demo_lifecycle.DemoLifecycleTests.test_cancel_when_idle_preserves_completed_recording) ... ok
+test_capture_error_retains_managed_incomplete_audio (test_demo_lifecycle.DemoLifecycleTests.test_capture_error_retains_managed_incomplete_audio) ... ok
+test_close_revokes_capture_waiting_for_discovery (test_demo_lifecycle.DemoLifecycleTests.test_close_revokes_capture_waiting_for_discovery) ... ok
+test_close_while_transcribing_is_refused (test_demo_lifecycle.DemoLifecycleTests.test_close_while_transcribing_is_refused) ... ok
+test_deferred_capture_is_not_consumed_during_another_operation (test_demo_lifecycle.DemoLifecycleTests.test_deferred_capture_is_not_consumed_during_another_operation) ... ok
+test_delete_confirmation_uses_original_id_and_rechecks_busy_state (test_demo_lifecycle.DemoLifecycleTests.test_delete_confirmation_uses_original_id_and_rechecks_busy_state) ... ok
+test_deleting_recording_requires_idle_state (test_demo_lifecycle.DemoLifecycleTests.test_deleting_recording_requires_idle_state) ... ok
+test_eos_persists_finalized_capture (test_demo_lifecycle.DemoLifecycleTests.test_eos_persists_finalized_capture) ... ok
+test_export_cannot_replace_its_own_database (test_demo_lifecycle.DemoLifecycleTests.test_export_cannot_replace_its_own_database) ... ok
+test_export_uses_snapshot_and_failure_keeps_unsaved_guard (test_demo_lifecycle.DemoLifecycleTests.test_export_uses_snapshot_and_failure_keeps_unsaved_guard) ... ok
+test_failed_capture_cancel_does_not_claim_deletion_succeeded (test_demo_lifecycle.DemoLifecycleTests.test_failed_capture_cancel_does_not_claim_deletion_succeeded) ... ok
+test_failed_finalization_metadata_does_not_claim_save_succeeded (test_demo_lifecycle.DemoLifecycleTests.test_failed_finalization_metadata_does_not_claim_save_succeeded) ... ok
+test_new_capture_preserves_older_failed_recording (test_demo_lifecycle.DemoLifecycleTests.test_new_capture_preserves_older_failed_recording) ... ok
+test_open_retained_audio_and_saved_text_after_restart (test_demo_lifecycle.DemoLifecycleTests.test_open_retained_audio_and_saved_text_after_restart) ... ok
+test_playback_error_preserves_valid_audio_for_retry (test_demo_lifecycle.DemoLifecycleTests.test_playback_error_preserves_valid_audio_for_retry) ... ok
+test_recording_or_playback_blocks_transcription_before_loading_credentials (test_demo_lifecycle.DemoLifecycleTests.test_recording_or_playback_blocks_transcription_before_loading_credentials) ... ok
+test_repeated_shortcut_revokes_request_before_discovery (test_demo_lifecycle.DemoLifecycleTests.test_repeated_shortcut_revokes_request_before_discovery) ... ok
+test_stale_result_cannot_overwrite_new_job (test_demo_lifecycle.DemoLifecycleTests.test_stale_result_cannot_overwrite_new_job) ... ok
+test_stop_during_live_drain_cancels_live_session_and_ignores_late_output (test_demo_lifecycle.DemoLifecycleTests.test_stop_during_live_drain_cancels_live_session_and_ignores_late_output) ... ok
+test_stop_revokes_capture_waiting_for_discovery (test_demo_lifecycle.DemoLifecycleTests.test_stop_revokes_capture_waiting_for_discovery) ... ok
+test_storage_failure_preserves_result_and_blocks_switch_until_retry (test_demo_lifecycle.DemoLifecycleTests.test_storage_failure_preserves_result_and_blocks_switch_until_retry) ... ok
+test_success_displays_text_but_only_explicit_copy_changes_clipboard (test_demo_lifecycle.DemoLifecycleTests.test_success_displays_text_but_only_explicit_copy_changes_clipboard) ... ok
+test_success_is_saved_before_audio_is_removed (test_demo_lifecycle.DemoLifecycleTests.test_success_is_saved_before_audio_is_removed) ... ok
+test_transcription_errors_preserve_recording_for_retry (test_demo_lifecycle.DemoLifecycleTests.test_transcription_errors_preserve_recording_for_retry) ... ok
+test_completed_text_can_be_edited_and_cleared_without_status_change (test_history_store.EditableDraftTests.test_completed_text_can_be_edited_and_cleared_without_status_change) ... ok
+test_draft_edits_preserve_recording_status_and_audio_across_reopen (test_history_store.EditableDraftTests.test_draft_edits_preserve_recording_status_and_audio_across_reopen) ... ok
+test_active_recording_needs_explicit_discard (test_history_store.HistoryStoreTests.test_active_recording_needs_explicit_discard) ... ok
+test_cleanup_failure_does_not_rollback_saved_transcript (test_history_store.HistoryStoreTests.test_cleanup_failure_does_not_rollback_saved_transcript) ... ok
+test_database_write_failure_never_deletes_audio (test_history_store.HistoryStoreTests.test_database_write_failure_never_deletes_audio) ... ok
+test_delete_failure_preserves_entry_and_delete_is_targeted (test_history_store.HistoryStoreTests.test_delete_failure_preserves_entry_and_delete_is_targeted) ... ok
+test_export_is_utf8_and_preserves_existing_file_on_failure (test_history_store.HistoryStoreTests.test_export_is_utf8_and_preserves_existing_file_on_failure) ... ok
+test_failed_and_cancelled_audio_survives_restart_and_new_recording (test_history_store.HistoryStoreTests.test_failed_and_cancelled_audio_survives_restart_and_new_recording) ... ok
+test_interrupted_and_orphan_recordings_are_retained (test_history_store.HistoryStoreTests.test_interrupted_and_orphan_recordings_are_retained) ... ok
+test_order_and_pagination_use_summaries_only (test_history_store.HistoryStoreTests.test_order_and_pagination_use_summaries_only) ... ok
+test_private_directories_and_files (test_history_store.HistoryStoreTests.test_private_directories_and_files) ... ok
+test_rejects_traversal_and_symlinked_audio (test_history_store.HistoryStoreTests.test_rejects_traversal_and_symlinked_audio) ... ok
+test_sql_like_text_is_saved_as_data (test_history_store.HistoryStoreTests.test_sql_like_text_is_saved_as_data) ... ok
+test_transcript_survives_reopen_and_audio_is_removed_after_save (test_history_store.HistoryStoreTests.test_transcript_survives_reopen_and_audio_is_removed_after_save) ... ok
+test_unknown_schema_is_not_modified (test_history_store.HistoryStoreTests.test_unknown_schema_is_not_modified) ... ok
+test_xdg_path_and_relative_override_are_safe (test_history_store.HistoryStoreTests.test_xdg_path_and_relative_override_are_safe) ... ok
+test_real_database_lock_retains_audio_and_returns_fixed_error (test_history_store.LockedStoreTests.test_real_database_lock_retains_audio_and_returns_fixed_error) ... ok
+test_append_keeps_user_corrections_and_uses_end_insertion (test_live_controller.LiveControllerTests.test_append_keeps_user_corrections_and_uses_end_insertion) ... ok
+test_cancel_invalidates_session_before_late_delivery (test_live_controller.LiveControllerTests.test_cancel_invalidates_session_before_late_delivery) ... ok
+test_fresh_editor_tracks_text_and_creates_durable_manual_history (test_live_controller.LiveControllerTests.test_fresh_editor_tracks_text_and_creates_durable_manual_history) ... ok
+test_live_error_and_cancel_preserve_partial_text_and_audio (test_live_controller.LiveControllerTests.test_live_error_and_cancel_preserve_partial_text_and_audio) ... ok
+test_stale_session_cannot_change_edited_text (test_live_controller.LiveControllerTests.test_stale_session_cannot_change_edited_text) ... ok
+test_stop_saves_current_edited_buffer_and_then_removes_audio (test_live_controller.LiveControllerTests.test_stop_saves_current_edited_buffer_and_then_removes_audio) ... ok
+test_storage_failure_retains_dirty_edits_for_retry (test_live_controller.LiveControllerTests.test_storage_failure_retains_dirty_edits_for_retry) ... ok
+test_cancel_discards_queued_and_late_results (test_live_session.LiveSessionTests.test_cancel_discards_queued_and_late_results) ... ok
+test_cloud_is_rejected_before_worker_start (test_live_session.LiveSessionTests.test_cloud_is_rejected_before_worker_start) ... ok
+test_failure_is_fixed_and_stops_later_chunks (test_live_session.LiveSessionTests.test_failure_is_fixed_and_stops_later_chunks) ... ok
+test_limit_drains_previously_accepted_audio_despite_late_stop (test_live_session.LiveSessionTests.test_limit_drains_previously_accepted_audio_despite_late_stop) ... ok
+test_order_and_short_tail_are_complete_private_wavs (test_live_session.LiveSessionTests.test_order_and_short_tail_are_complete_private_wavs) ... ok
+test_silence_is_not_a_terminal_error (test_live_session.LiveSessionTests.test_silence_is_not_a_terminal_error) ... ok
+test_live_mode_still_rejects_missing_text_and_invalid_json (test_local_transcription.LiveResponseTests.test_live_mode_still_rejects_missing_text_and_invalid_json) ... ok
+test_only_explicit_live_local_requests_allow_empty_text (test_local_transcription.LiveResponseTests.test_only_explicit_live_local_requests_allow_empty_text) ... ok
+test_cloud_key_alone_does_not_enable_cloud (test_local_transcription.LocalConfigurationTests.test_cloud_key_alone_does_not_enable_cloud) ... ok
+test_local_is_default_without_api_key (test_local_transcription.LocalConfigurationTests.test_local_is_default_without_api_key) ... ok
+test_local_request_never_contains_cloud_credentials (test_local_transcription.LocalConfigurationTests.test_local_request_never_contains_cloud_credentials) ... ok
+test_local_url_must_be_plain_loopback_http (test_local_transcription.LocalConfigurationTests.test_local_url_must_be_plain_loopback_http) ... ok
+test_busy_model_does_not_queue_second_inference (test_local_transcription.LocalServiceTests.test_busy_model_does_not_queue_second_inference) ... ok
+test_health_and_valid_transcription (test_local_transcription.LocalServiceTests.test_health_and_valid_transcription) ... ok
+test_invalid_requests_are_fixed_errors (test_local_transcription.LocalServiceTests.test_invalid_requests_are_fixed_errors) ... ok
+test_model_loader_is_cpu_int8_and_offline (test_local_transcription.LocalServiceTests.test_model_loader_is_cpu_int8_and_offline) ... ok
+test_rejects_origin_and_non_json_requests (test_local_transcription.LocalServiceTests.test_rejects_origin_and_non_json_requests) ... ok
+test_cancel_after_connection_attaches_prevents_upload_and_closes (test_openrouter_transcription.OpenRouterTranscriptionTests.test_cancel_after_connection_attaches_prevents_upload_and_closes) ... ok
+test_cancel_before_request_prevents_upload (test_openrouter_transcription.OpenRouterTranscriptionTests.test_cancel_before_request_prevents_upload) ... ok
+test_cancelled_connection_cannot_automatically_reconnect_and_upload (test_openrouter_transcription.OpenRouterTranscriptionTests.test_cancelled_connection_cannot_automatically_reconnect_and_upload) ... ok
+test_http_errors_are_redacted_and_not_retried (test_openrouter_transcription.OpenRouterTranscriptionTests.test_http_errors_are_redacted_and_not_retried) ... ok
+test_missing_or_invalid_audio_never_opens_connection (test_openrouter_transcription.OpenRouterTranscriptionTests.test_missing_or_invalid_audio_never_opens_connection) ... ok
+test_network_errors_and_timeout_are_fixed_messages (test_openrouter_transcription.OpenRouterTranscriptionTests.test_network_errors_and_timeout_are_fixed_messages) ... ok
+test_rejects_audio_size_and_duration_before_request (test_openrouter_transcription.OpenRouterTranscriptionTests.test_rejects_audio_size_and_duration_before_request) ... ok
+test_rejects_invalid_empty_or_oversized_response (test_openrouter_transcription.OpenRouterTranscriptionTests.test_rejects_invalid_empty_or_oversized_response) ... ok
+test_sends_wav_to_fixed_https_endpoint_and_returns_text (test_openrouter_transcription.OpenRouterTranscriptionTests.test_sends_wav_to_fixed_https_endpoint_and_returns_text) ... ok
+test_cli_json_does_not_claim_functional_success (test_probe_report.ProbeReportTests.test_cli_json_does_not_claim_functional_success) ... ok
+test_installed_dependencies_do_not_prove_audio_or_shortcuts (test_probe_report.ProbeReportTests.test_installed_dependencies_do_not_prove_audio_or_shortcuts) ... ok
+test_missing_dependency_is_unavailable (test_probe_report.ProbeReportTests.test_missing_dependency_is_unavailable) ... ok
+test_missing_session_bus_is_blocked (test_probe_report.ProbeReportTests.test_missing_session_bus_is_blocked) ... ok
+test_report_contains_no_environment_values_or_device_identifiers (test_probe_report.ProbeReportTests.test_report_contains_no_environment_values_or_device_identifiers) ... ok
+test_report_schema (test_probe_report.ProbeReportTests.test_report_schema) ... ok
+test_timeout_is_handled_without_raw_exception (test_probe_report.ProbeReportTests.test_timeout_is_handled_without_raw_exception) ... ok
+test_generation_model_is_not_used_for_transcription (test_transcription_config.TranscriptionConfigTests.test_generation_model_is_not_used_for_transcription) ... ok
+test_invalid_config_does_not_echo_secret_or_execute_shell (test_transcription_config.TranscriptionConfigTests.test_invalid_config_does_not_echo_secret_or_execute_shell) ... ok
+test_missing_config_key_and_model_report_fixed_errors (test_transcription_config.TranscriptionConfigTests.test_missing_config_key_and_model_report_fixed_errors) ... ok
+test_process_environment_takes_precedence (test_transcription_config.TranscriptionConfigTests.test_process_environment_takes_precedence) ... ok
+test_reads_separate_transcription_model_and_hides_key (test_transcription_config.TranscriptionConfigTests.test_reads_separate_transcription_model_and_hides_key) ... ok
+test_rejects_header_injection_and_invalid_model (test_transcription_config.TranscriptionConfigTests.test_rejects_header_injection_and_invalid_model) ... ok
+test_rejects_oversized_env_without_echoing_content (test_transcription_config.TranscriptionConfigTests.test_rejects_oversized_env_without_echoing_content) ... ok
+test_supports_quotes_export_and_comments (test_transcription_config.TranscriptionConfigTests.test_supports_quotes_export_and_comments) ... ok
+test_cancel_before_start_never_invokes_transcriber (test_transcription_job.TranscriptionJobTests.test_cancel_before_start_never_invokes_transcriber) ... ok
+test_cancel_closes_connection_and_discards_late_result (test_transcription_job.TranscriptionJobTests.test_cancel_closes_connection_and_discards_late_result) ... ok
+test_cancel_does_not_wait_for_real_http_reader_lock (test_transcription_job.TranscriptionJobTests.test_cancel_does_not_wait_for_real_http_reader_lock) ... ok
+test_deadline_dispatches_before_blocking_http_cleanup (test_transcription_job.TranscriptionJobTests.test_deadline_dispatches_before_blocking_http_cleanup) ... ok
+test_deadline_publishes_timeout_once_and_ignores_late_completion (test_transcription_job.TranscriptionJobTests.test_deadline_publishes_timeout_once_and_ignores_late_completion) ... ok
+test_errors_only_publish_fixed_code (test_transcription_job.TranscriptionJobTests.test_errors_only_publish_fixed_code) ... ok
+test_success_is_dispatched_once_with_job_identity (test_transcription_job.TranscriptionJobTests.test_success_is_dispatched_once_with_job_identity) ... ok
+
+----------------------------------------------------------------------
+Ran 103 tests in 2.761s
+
+OK
+
+$ /usr/bin/python3 scripts/linux/tests/check-capture-limit.py
+Exit status: 0
+GStreamer 16000 Hz input: WAV and live PCM capped at exactly 300 seconds; EOS passed.
+GStreamer 44100 Hz input: WAV and live PCM capped at exactly 300 seconds; EOS passed.
+GStreamer 48000 Hz input: WAV and live PCM capped at exactly 300 seconds; EOS passed.
+
+$ LANGUAGE=en /usr/bin/python3 scripts/linux/tests/check-live-desktop.py /tmp/whisper-live-fixture.wav
+Exit status: 0
+Live GTK/GStreamer/local model: text during capture, correction preserved, ordered append, cursor retained, Stop drain, audio cleanup and restart persistence passed.
+
+$ LANGUAGE=de /usr/bin/python3 scripts/linux/tests/check-live-desktop.py /tmp/whisper-live-fixture.wav
+Exit status: 0
+Live GTK/GStreamer/local model: text during capture, correction preserved, ordered append, cursor retained, Stop drain, audio cleanup and restart persistence passed.
+
+$ LANGUAGE=de /usr/bin/python3 scripts/linux/tests/check-history-desktop.py
+Exit status: 0
+
+** (gst-plugin-scanner:929910): CRITICAL **: 10:09:36.900: _dma_fmt_to_dma_drm_fmts: assertion 'fmt != GST_VIDEO_FORMAT_UNKNOWN' failed
+GTK history: startup restore, open text/audio, UTF-8 export, targeted delete and native dialog construction passed.
+GTK window rendered; main-loop timer fired; no recording started.
+
+$ /usr/bin/python3 -m compileall -q apps/linux/prototype apps/linux/services scripts/linux/tests
+Exit status: 0; no output.
+
+$ bash -n scripts/linux/*.sh
+Exit status: 0; no output.
+
+$ git diff --check
+Exit status: 0; no output.
