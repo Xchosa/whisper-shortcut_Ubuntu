@@ -1,6 +1,6 @@
 """Small GTK history selector; storage and recording actions belong to Demo."""
 from datetime import datetime
-from gi.repository import Gtk
+from gi.repository import Gtk, Pango
 
 
 class HistoryPanel:
@@ -10,6 +10,13 @@ class HistoryPanel:
         self.widget = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
         self.widget.append(Gtk.Label(label=translate("Local history"), xalign=0))
         self.selector = Gtk.DropDown.new_from_strings([translate("No saved entries")])
+        # Long transcript previews must not force the entire editor off screen.
+        factory = Gtk.SignalListItemFactory()
+        factory.connect("setup", lambda _, item: item.set_child(
+            Gtk.Label(xalign=0, ellipsize=Pango.EllipsizeMode.END, max_width_chars=55)))
+        factory.connect("bind", lambda _, item: item.get_child().set_text(item.get_item().get_string()))
+        self.selector.set_factory(factory)
+        self.selector.set_list_factory(factory)
         self.widget.append(self.selector)
         row = Gtk.Box(spacing=6)
         self.widget.append(row)

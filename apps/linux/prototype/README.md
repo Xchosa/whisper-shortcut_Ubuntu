@@ -1,7 +1,7 @@
 # Ubuntu transcription prototype
 
-Record locally, explicitly transcribe through a small CPU container, then display
-save, reopen, export and copy the transcript. This is a development prototype, not full Mac parity.
+Record locally, read and edit live text from a small CPU container, then save,
+reopen, export and copy the transcript. This is a development prototype, not full Mac parity.
 
 ## Start on Ubuntu 24.04 / GNOME
 
@@ -20,22 +20,45 @@ normal Docker bridge (not an egress firewall), and publishes only
 `127.0.0.1:8765`. The GUI handles the microphone; no audio device or personal
 folder is mounted into the container.
 
-1. Select a microphone source and click **Record microphone**.
-2. Click **Stop and finalize** and wait until the recording is saved.
-3. Click **Transcribe recording (local CPU)**.
-4. Read the **Transcript** field; **Copy transcript** copies it explicitly.
+1. Leave **Live transcription (local CPU)** enabled and select a microphone.
+2. Click **Record microphone**. The first text appears after approximately five
+   seconds of audio plus model processing time; subsequent sections append.
+3. Edit the recognized text directly while speaking. New recognition inserts at
+   the end and preserves corrections and a cursor placed inside earlier text.
+4. Click **Stop and finalize**. The last section and any queued sections finish;
+   you can continue editing while they run. The current edited text is saved.
+5. **Copy transcript** and **Export transcript** use your edited version.
 
-No transcription starts on launch, recording Stop, or playback. During
-transcription, Cancel stops the UI operation, attempts to close the connection,
-and retains the WAV for retry. The model may finish its already-started CPU work
-before becoming available for another request. No automatic cloud fallback or
-request retry is performed. Delete an entry explicitly through the history controls.
+For manual batch transcription, switch Live off, Record, Stop and finalize,
+then click **Transcribe recording**. Cloud mode disables Live and remains
+explicitly manual. There is no automatic cloud fallback or request retry.
+Manual re-transcription refuses to replace a nonempty editor: export/keep your
+corrections first, then explicitly clear the text before requesting replacement.
+
+Recording starts only on your explicit Record/shortcut action, never on launch.
+Live mode sends short sections to the local container automatically after Record.
+Capture is capped upstream at five minutes, and accepted sections drain normally.
+One inference runs at a time; a slower CPU can cause sections to finish after
+Stop. Text arrives in section-sized paragraphs rather than token by token.
+Boundaries may cut a word or reduce context; this is a first live implementation,
+not a claim of the same accuracy as transcribing a whole recording.
+
+If live inference fails, the partial edited text and full recording stay in
+history. Cancel invalidates pending live output and keeps drafts/audio. An
+unfinished WAV may be invalid; Stop is the normal way to finish. Manual batch
+Cancel keeps audio for retry too. Cancelling a manual recording also retains any
+text you typed; without text it discards the unfinished test recording. The model may finish already-started CPU work
+before another request can run. Delete an entry explicitly through history.
 
 The small multilingual `base` model supports testing German/English; recording
 quality and recognition accuracy still need evaluation on your own speech. It
 uses faster-whisper 1.2.1 / CPU INT8, with PyAV 16.0.1 pinned for compatibility.
 The Docker build decodes a synthetic WAV so incompatible decoder updates fail
 before deployment. Model revision is pinned in the Dockerfile.
+
+Free text typed into an empty editor is tracked immediately and saved as its own
+history entry. Edits to existing entries are saved after a short debounce. Copy
+and export always use the current text.
 
 ## Current limits and privacy
 
@@ -46,10 +69,13 @@ before deployment. Model revision is pinned in the Dockerfile.
   `~/.local/share/whispershortcut/history.sqlite3` when XDG_DATA_HOME is unset.
   App/recording directories use mode 0700; database/audio/export files use 0600.
   These are local plaintext files, protected by OS permissions, not encryption.
-- Successful transcription saves the text before deleting its audio. Failed,
+- Edits checkpoint after a short debounce and before leaving an entry. Draft saves
+  preserve recording status/audio. Successful completed transcription saves the
+  current edited text before deleting its audio. Failed,
   cancelled-transcription and untranscribed recordings remain across restarts,
   including when a new recording starts. There is no automatic expiry or pruning.
-  Explicit cancellation of an active capture discards that unfinished recording.
+  Live cancellation keeps the current draft and unfinished audio; manual capture
+  cancellation explicitly discards its unfinished recording.
 - Startup restores the latest entry and marks interrupted operations. Incomplete
   WAV headers after a capture failure/crash may prevent playback/transcription;
   retaining a file is not a guarantee that damaged audio can be repaired.
@@ -126,6 +152,8 @@ bash scripts/linux/test.sh
 bash scripts/linux/run-prototype.sh --smoke-test
 # Synthetic history/restart/export/delete desktop check in an isolated data root:
 /usr/bin/python3 scripts/linux/tests/check-history-desktop.py
+# Optional real local model/GStreamer test; provide a public/synthetic WAV:
+/usr/bin/python3 scripts/linux/tests/check-live-desktop.py /tmp/test-fixture.wav
 ```
 
 The smoke check refuses to replace an existing instance. Quit normally before a

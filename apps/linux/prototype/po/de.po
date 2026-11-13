@@ -349,3 +349,30 @@ msgstr "Stoppen Sie den aktiven Vorgang oder brechen Sie ihn vor dem Ändern des
 
 msgid "The text export failed. Your transcript remains available."
 msgstr "Der Textexport ist fehlgeschlagen. Ihr Transkript bleibt verfügbar."
+
+msgid "Transcription uses the local container by default. OpenRouter requires explicit cloud configuration. Live mode transcribes while recording; switch it off for manual transcription."
+msgstr "Die Transkription verwendet standardmäßig den lokalen Container. OpenRouter erfordert eine ausdrückliche Cloud-Konfiguration. Der Live-Modus transkribiert während der Aufnahme; für manuelle Transkription schalten Sie ihn aus."
+
+msgid "Live transcription (local CPU)"
+msgstr "Live-Transkription (lokale CPU)"
+
+msgid "Live transcription requires local mode. Disable Live for manual cloud transcription."
+msgstr "Live-Transkription benötigt den lokalen Modus. Schalten Sie Live für manuelle Cloud-Transkription aus."
+
+msgid "Recording with live text — corrections are kept; new text is appended."
+msgstr "Aufnahme mit Live-Text — Korrekturen bleiben erhalten; neuer Text wird angehängt."
+
+msgid "This entry already contains text. Keep or export your edits; clear the editor explicitly before replacing it by transcription."
+msgstr "Dieser Eintrag enthält bereits Text. Behalten oder exportieren Sie Ihre Korrekturen. Leeren Sie das Textfeld ausdrücklich, bevor Sie den Text durch eine neue Transkription ersetzen."
+
+msgid "Finishing live transcription… You can keep editing."
+msgstr "Live-Transkription wird abgeschlossen… Sie können weiter bearbeiten."
+
+msgid "No speech detected. Your recording is kept."
+msgstr "Keine Sprache erkannt. Ihre Aufnahme bleibt erhalten."
+
+msgid "Live transcription cancelled. Edited text and recording are kept."
+msgstr "Live-Transkription abgebrochen. Bearbeiteter Text und Aufnahme bleiben erhalten."
+
+msgid "Recording cancelled. Edited text and recording are kept."
+msgstr "Aufnahme abgebrochen. Bearbeiteter Text und Aufnahme bleiben erhalten."

@@ -177,3 +177,26 @@ class LockedStoreTests(unittest.TestCase):
                 lock.close()
             store.save_transcript(entry.id, "synthetic text", "local", "base")
             self.assertFalse(path.exists())
+
+class EditableDraftTests(unittest.TestCase):
+    def test_draft_edits_preserve_recording_status_and_audio_across_reopen(self):
+        with tempfile.TemporaryDirectory() as directory:
+            store = HistoryStore(Path(directory))
+            entry = store.create_recording()
+            store.update_text(entry.id, 'Corrected live draft')
+            self.assertEqual(store.get(entry.id).status, 'recording')
+            self.assertTrue(store.audio_path(entry.id).exists())
+            reopened = HistoryStore(Path(directory))
+            self.assertEqual(reopened.get(entry.id).text, 'Corrected live draft')
+            self.assertEqual(reopened.get(entry.id).status, 'interrupted')
+
+    def test_completed_text_can_be_edited_and_cleared_without_status_change(self):
+        with tempfile.TemporaryDirectory() as directory:
+            store = HistoryStore(Path(directory))
+            entry = store.create_recording()
+            store.save_transcript(entry.id, 'Original', 'local', 'base')
+            store.update_text(entry.id, 'Correction')
+            self.assertEqual(store.get(entry.id).text, 'Correction')
+            store.update_text(entry.id, '')
+            self.assertEqual(store.get(entry.id).status, 'completed')
+            self.assertEqual(store.get(entry.id).text, '')
